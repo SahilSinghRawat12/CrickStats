@@ -48,3 +48,37 @@ export const playersList = [
         role : "Bowler"
     },
 ]
+
+export const category = [
+    {
+        category : "Batsman"
+    },
+    {
+        category : "Bowler"
+    },
+    {
+        category : "Wicket Keeper"
+    },
+    {
+        category : "All Rounder"
+    }
+]
+
+export const teamsNames = [
+    {
+        teamName : "Delhi Warriors",
+        totalPlayers : "11 PLayers"
+    },
+    {
+        teamName : "Hyderabad Hybrid",
+        totalPlayers : "11 PLayers"
+    },
+    {
+        teamName : "Mumbai Master",
+        totalPlayers : "11 PLayers"
+    },
+    {
+        teamName : "Chennai Champions",
+        totalPlayers : "11 PLayers"
+    },
+]

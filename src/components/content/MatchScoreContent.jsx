@@ -2,7 +2,7 @@ import React from 'react'
 
 const MatchScoreContent = () => {
   return (
-    <div className='w-full pl-16'>
+    <div className='w-full h-screen bg-red-500 pl-16'>
         <div className='flex flex-col w-[80%] mt-10 justify-between'>
            
             <div className='flex justify-evenly items-center'>   
@@ -77,7 +77,7 @@ const MatchScoreContent = () => {
 
                   {/* bowling scroecard */}
                    
-                   <div className='w-full mt-16 mb-8'>
+                   <div className='w-full mt-16 mb-8 '>
                    <h1 className='text-2xl mb-6'>Bowling</h1>
 
                      <div className='ml-5 '>
