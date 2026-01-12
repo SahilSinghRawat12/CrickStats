@@ -1,17 +1,21 @@
 import React, { useState } from 'react'
 import { CiSquarePlus } from "react-icons/ci";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 
 
 const MatchContent = () => {
+
+    const navigate = useNavigate();
+
   return (
     <div className='w-full pl-16 '>
            <div className='flex items-center w-[80%] mt-10 justify-between'>
                <h1 className='text-3xl font-bold'>Matches</h1>
    
-               <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'>
+               <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'
+               onClick={()=> navigate('/matches/create_match')}>
                    <CiSquarePlus color='white' size={23} />
                     <span>ADD Match</span>
                </button>

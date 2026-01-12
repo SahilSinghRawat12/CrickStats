@@ -12,6 +12,8 @@ import ScoreCard from './pages/ScoreCard'
 import TeamDetailsPage from './pages/TeamDetailsPage'
 import AddingPlayers from './pages/AddingPlayers'
 import AddTeam from './pages/AddTeam'
+import AddMatch from './pages/AddMatch'
+import LiveScore from './pages/LiveScore'
 
 function App() {
   
@@ -29,8 +31,10 @@ function App() {
            <Route path='/teams/teamdetails' element={<TeamDetailsPage/>} />
            <Route path='/teams/teamdetails/add_player' element={<AddingPlayers/>} />
            <Route path='/matches' element={<Matches/>} />
+           <Route path='/matches/create_match' element={<AddMatch/>} />
            <Route path='/matches/details' element={<ScoreCard/>} />
            <Route path='/players' element={<Players/>} />
+           <Route path='/live_match' element={<LiveScore/>} />
 
         </Routes>
     </div>

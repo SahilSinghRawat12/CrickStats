@@ -1,10 +1,18 @@
 import React from 'react'
+import { MdArrowBackIosNew } from 'react-icons/md'
+import { useNavigate } from 'react-router-dom'
 
 const MatchScoreContent = () => {
+  const navigate = useNavigate();
   return (
-    <div className='w-full h-screen bg-red-500 pl-16'>
-        <div className='flex flex-col w-[80%] mt-10 justify-between'>
+    <div className='w-full   min-h-screen pl-16'>
+        <div className='flex flex-col w-[80%] mt-10 justify-between relative'>
            
+           <div className='left-2 top-0 absolute cursor-pointer' 
+                           onClick={()=> {navigate(-1) || navigate('/matches')}}>
+                            <MdArrowBackIosNew/>
+            </div>
+            
             <div className='flex justify-evenly items-center'>   
                <div className='flex flex-col items-center'>
                     <h1 className='text-2xl bg-blue-600 text-white

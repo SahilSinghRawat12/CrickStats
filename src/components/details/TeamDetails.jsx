@@ -2,22 +2,31 @@ import React from 'react'
 import { CiSquarePlus } from 'react-icons/ci'
 import { playersList } from '../../data/data'
 import { IoIosRemoveCircleOutline } from "react-icons/io";
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { MdArrowBackIosNew } from 'react-icons/md';
 
  
 
 const TeamDetails = () => {
+
+  const navigate = useNavigate();
+
   return (
-    <div className='w-full pl-16'>
+    <div className='w-full relative pl-16'>
+      <div className='left-5 top-5 absolute cursor-pointer' 
+                      onClick={()=> {navigate(-1) || navigate('/teams')} }>
+                       <MdArrowBackIosNew/>
+                      </div>
           <div className='flex items-center w-[80%] mt-10 justify-between'>
                 <h1 className='text-3xl font-bold'>Delhi Warriors</h1>
              
-             <NavLink to="/teams/teamdetails/add_player">
-                  <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'>
+              
+                  <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'
+                   onClick={()=> navigate('/teams/teamdetails/add_player')} >
                          <CiSquarePlus color='white' size={23} />
                          <span>ADD Player</span>
                   </button>
-              </NavLink>
+              
            </div>
 
 

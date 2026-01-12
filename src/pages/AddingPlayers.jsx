@@ -1,12 +1,16 @@
 import React, { useState } from 'react'
 import defaultImage from "../assests/image.png"
 import { category } from '../data/data'
+import { MdArrowBackIosNew } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
+
 
 const AddingPlayers = () => {
 
     const [isActiveIndex , setIsActiveIndex] = useState(0);
     const [isActive , setIsActive] = useState(false);
     const [name , setName] = useState("");
+    const navigate = useNavigate();
 
     function submitHandler(event)
     {
@@ -16,9 +20,16 @@ const AddingPlayers = () => {
   return (
     <div className='h-screen w-full'>
         <div className=' bg-[#f9fafb] h-full flex justify-center py-2'>
-            <form className='border border-black flex flex-col items-center pt-14 w-1/2 gap-y-10
+            <form className='border relative border-black flex flex-col items-center pt-5 w-1/2 gap-y-10
             bg-white'
-              onSubmit={submitHandler} >
+            onSubmit={submitHandler} >
+
+              <h1 className='text-2xl'>Add New Player</h1>
+
+                <div className='left-5 top-5 absolute cursor-pointer' 
+                onClick={()=> {navigate(-1) || navigate('/teams/teamdetails')}}>
+                 <MdArrowBackIosNew/>
+                </div>
 
               <div className= ' w-32 h-32 rounded-full'>
                 <img src={defaultImage} alt='profile'  className='rounded-full '/>
