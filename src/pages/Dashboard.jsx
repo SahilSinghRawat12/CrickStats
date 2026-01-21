@@ -14,7 +14,7 @@ const Dashboard = () => {
         ${isOpen ? 'ml-[250px]' : 'ml-[100px]'}
         `}>
       <DashContent />
-        <TopPlayers />
+        {/* <TopPlayers /> */}
       </div>
 
         

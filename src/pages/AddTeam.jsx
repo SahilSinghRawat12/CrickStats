@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import defaultImage from "../assests/image.png"
 import { category } from '../data/data'
 import { MdArrowBackIosNew } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
+import { AppContext } from '../context/AppContext'
 
 const AddTeam = () => {
 
+ const {state , dispatch} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
  const [value , setValue] = useState(1);
  const navigate = useNavigate();
@@ -13,8 +15,23 @@ const AddTeam = () => {
  function submitHandler(e)
  {
     e.preventDefault();
+
+    dispatch(
+      {
+        type: 'ADD_TEAM',
+        payload: {
+          teamName: teamName,
+          totalPlayers: value
+        }
+      }
+    );
+
+    setTeamName("");
+    setValue(1);
+
  }
 
+ 
   return (
     <div className='h-screen w-full'>
         <div className=' bg-[#f9fafb] h-full flex justify-center py-2'>
@@ -57,7 +74,7 @@ const AddTeam = () => {
                   />
               </div>
 
-              <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>Save</button>   
+          <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>Create Team</button>   
 
             </form>
 
