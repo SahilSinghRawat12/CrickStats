@@ -9,7 +9,10 @@ const AddingPlayers = () => {
 
     const [isActiveIndex , setIsActiveIndex] = useState(0);
     const [isActive , setIsActive] = useState(false);
-    const [name , setName] = useState("");
+    const [formData , setFormData] = useState({
+      name: "" , btn: "", captain: false
+    })
+
     const navigate = useNavigate();
 
     function submitHandler(event)
@@ -41,8 +44,8 @@ const AddingPlayers = () => {
                  placeholder='Enter Player Name'
                  className='border border-b-black border-white p-1'
                  name = "name"
-                 value = {name}
-                 onChange={(e)=> setName(e.target.value)}
+                 value = {formData.name}
+                 onChange={changeHandler}
                  />
               </div>
 
@@ -51,6 +54,8 @@ const AddingPlayers = () => {
                       category.map((cat , index) => (
                         <button key={index}
                          onClick={()=> setIsActiveIndex(index)}
+                         name='btn'
+                         value={formData.btn}
                         className={`border border-black py-2 px-4 rounded-xl transition-colors duration-200 hover:bg-black hover:text-white
                         ${isActiveIndex === index ? "bg-black text-white" : "bg-white text-black"}`}>
                           {cat.category}
@@ -62,6 +67,8 @@ const AddingPlayers = () => {
                   <div className='px-2 py-2'>
                      <button 
                       onClick={() => setIsActive(!isActive)}
+                      name='captain'
+                      value={formData.captain}
                       className={`border border-black py-2 px-4 rounded-xl  transition-colors duration-200 hover:bg-blue-800 hover:text-white
                       ${isActive ? "bg-blue-800 text-white" : "bg-white text-black"}`}>
                       Captain
