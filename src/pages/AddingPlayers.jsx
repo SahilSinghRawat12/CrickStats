@@ -1,23 +1,30 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import defaultImage from "../assests/image.png"
 import { category } from '../data/data'
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 
 const AddingPlayers = () => {
 
+   const [state , dispatch] = useContext(AppContext);
+
     const [isActiveIndex , setIsActiveIndex] = useState(0);
     const [isActive , setIsActive] = useState(false);
-    const [formData , setFormData] = useState({
-      name: "" , btn: "", captain: false
-    })
+    const [name , setName] = useState("");
+    const [categorys , setCategorys] = useState("");
+    const [captain , setCaptain] = useState(false);
 
     const navigate = useNavigate();
+
 
     function submitHandler(event)
     {
       event.preventDefault();
+
+       
+
     }
 
   return (
@@ -31,7 +38,7 @@ const AddingPlayers = () => {
 
                 <div className='left-5 top-5 absolute cursor-pointer' 
                 onClick={()=> {navigate(-1) || navigate('/teams/teamdetails')}}>
-                 <MdArrowBackIosNew/>
+                 <MdArrowBackIosNew/> 
                 </div>
 
               <div className= ' w-32 h-32 rounded-full'>
@@ -44,8 +51,8 @@ const AddingPlayers = () => {
                  placeholder='Enter Player Name'
                  className='border border-b-black border-white p-1'
                  name = "name"
-                 value = {formData.name}
-                 onChange={changeHandler}
+                 value={name}
+                 onChange={(e) => setName(e.target.value)}
                  />
               </div>
 
@@ -53,9 +60,9 @@ const AddingPlayers = () => {
                     {
                       category.map((cat , index) => (
                         <button key={index}
-                         onClick={()=> setIsActiveIndex(index)}
-                         name='btn'
-                         value={formData.btn}
+                         onClick={(e)=> { setIsActiveIndex(index)
+                                   setCategorys(e.target.value)
+                         }}
                         className={`border border-black py-2 px-4 rounded-xl transition-colors duration-200 hover:bg-black hover:text-white
                         ${isActiveIndex === index ? "bg-black text-white" : "bg-white text-black"}`}>
                           {cat.category}
@@ -66,9 +73,9 @@ const AddingPlayers = () => {
 
                   <div className='px-2 py-2'>
                      <button 
-                      onClick={() => setIsActive(!isActive)}
-                      name='captain'
-                      value={formData.captain}
+                      onClick={() => {setIsActive(!isActive)
+                                setCaptain( prev => !prev)
+                      }}
                       className={`border border-black py-2 px-4 rounded-xl  transition-colors duration-200 hover:bg-blue-800 hover:text-white
                       ${isActive ? "bg-blue-800 text-white" : "bg-white text-black"}`}>
                       Captain
