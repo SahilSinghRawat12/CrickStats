@@ -1,18 +1,32 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { MdArrowBackIosNew } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
 import { teamsNames } from '../data/data'
+import { AppContext } from '../context/AppContext'
 
 const AddMatch = () => {
 
+ const {state} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
  const [value , setValue] = useState(1);
  const navigate = useNavigate();
+
+ const [teamA , setTeamA] = useState(null);
+ const [teamB , setTeamB] = useState(null);
  
  function submitHandler(e)
  {
     e.preventDefault();
+
+    //double check for safety
+    if (teamA === teamB) {
+    alert("Team A and Team B cannot be the same");
+    return;
+    }
+
  }
+
+ 
 
   return (
     <div className='h-screen w-full'>
@@ -33,11 +47,16 @@ const AddMatch = () => {
                 
                    <div className='flex flex-col gap-y-2'>
                     <label>Select Team A</label>
-                    <select className="border border-black p-2 rounded ">
+                    <select className="border border-black p-2 rounded "
+                    value={teamA ?? ""}
+                    onChange={(e) => setTeamA(Number(e.target.value))}
+                    >
                         <option disabled hidden>Select Team</option>
                         {
-                        teamsNames.map((team , index) => (
-                            <option key={index}>
+                        state.teams.map((team) => (
+                            <option key={team.id}
+                            value={team.id}
+                            disabled={team.id === teamB}>
                                 {team.teamName}
                             </option>
                         ))
@@ -47,11 +66,15 @@ const AddMatch = () => {
 
                   <div className='flex flex-col gap-y-2'>
                     <label>Select Team B</label>
-                    <select className="border border-black p-2 rounded ">
+                    <select className="border border-black p-2 rounded "
+                    value={teamB ?? ""}
+                    onChange={(e)=> setTeamB(Number(e.target.value))}>
                         <option disabled hidden>Select Team</option>
                         {
-                        teamsNames.map((team , index) => (
-                            <option key={index}>
+                        state.teams.map((team) => (
+                            <option key={team.id}
+                            value={team.id}
+                            disabled={team.id === teamA}>
                                 {team.teamName}
                             </option>
                         ))
@@ -95,7 +118,14 @@ const AddMatch = () => {
                         </div>
 
                         <div className='flex px-5 justify-between   py-2'>
-                            <div>MI</div>
+                            <select>
+                                <option>
+                                    {teamA}
+                                </option>
+                                <option>
+                                    {teamB}
+                                </option>
+                            </select>
                              <select className="border border-black rounded w-20 py-1 ">
                                 <option>Bat</option>
                                 <option>Bowl</option>

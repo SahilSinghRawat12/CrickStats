@@ -1,16 +1,21 @@
-import React from 'react'
+import React, { useContext , useEffect } from 'react'
 import { CiSquarePlus } from 'react-icons/ci'
 import { playersList } from '../../data/data'
 import { IoIosRemoveCircleOutline } from "react-icons/io";
 import { NavLink, useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew } from 'react-icons/md';
+import { AppContext } from '../../context/AppContext';
 
  
 
 const TeamDetails = () => {
 
+  const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
-
+  const currentTeam = state.teams.find(
+    (team) => team.id === state.currentTeamId
+  );
+  
   return (
     <div className='w-full relative pl-16'>
       <div className='left-5 top-5 absolute cursor-pointer' 
@@ -18,7 +23,7 @@ const TeamDetails = () => {
                        <MdArrowBackIosNew/>
                       </div>
           <div className='flex items-center w-[80%] mt-10 justify-between'>
-                <h1 className='text-3xl font-bold'>Delhi Warriors</h1>
+                <h1 className='text-3xl font-bold'>{currentTeam ? currentTeam.teamName : "No Team Selected"}</h1>
              
               
                   <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'
@@ -34,36 +39,43 @@ const TeamDetails = () => {
                    <h1 className='text-2xl mb-6'>Players</h1>
 
                      <div className='ml-5 '>
-                          <div className='border border-gray-300 p-5 flex justify-between   items-center  '>
-                              <div className='w-1/2'>
-                                <span className=' text-lg'>Player</span>
-                              </div>
-
-                             <div className='flex  justify-center items-center w-1/2 text-lg'> 
-                              <span className='w-full text-center'>Role</span>
-                             </div>
+                          <div className="border border-gray-300 p-5 grid grid-cols-[2fr_2fr_40px_40px] items-center">
+                            <span className="text-lg">Player</span>
+                            <span className="text-lg text-center">Role</span>
+                            <span></span>
+                            <span></span>
                           </div>
 
-                          {
-                            playersList.map( (players , index) => (
-                              <div key={index} className='border border-gray-300 p-4 flex justify-between  items-center  '>
 
-                                  <div className='w-1/2'>
-                                      <span>{players.player}</span>
-                                  </div>
+                          {state.players.map((player) => (
+                                <div
+                                  key={player.id}
+                                  className="border border-gray-300 p-4 grid grid-cols-[2fr_2fr_40px_40px] items-center"
+                                >
+                                  {/* Player name */}
+                                  <span>{player.playerName}</span>
 
-                                  <div className='flex justify-center items-center w-1/2'>
-                                    <span className='w-full text-center'>{players.role}</span> 
-                                  </div>
+                                  {/* Role */}
+                                  <span className="text-center">{player.playerRole}</span>
 
-                                  <span>
-                                      <IoIosRemoveCircleOutline size={18} className='cursor-pointer'/>
+                                  {/* Captain column (fixed space) */}
+                                  <span className={`text-center font-bold ${player.isCaptain ? "visible" : "invisible"}`}>
+                                    C
                                   </span>
 
-                              </div>
-                            ))
-                          }
-                        
+                                  {/* Remove */}
+                                  <span onClick={() => {
+                                    dispatch({
+                                      type: 'REMOVE_PLAYER',
+                                      payload: player.id
+                                      });
+                                  }}>
+                                  <IoIosRemoveCircleOutline  size={18} className="cursor-pointer mx-auto" />
+                                  </span>
+                                
+                                </div>
+                              ))}
+
                       </div>
                 </div>
 

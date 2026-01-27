@@ -9,7 +9,7 @@ const AddTeam = () => {
 
  const {state , dispatch} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
- const [value , setValue] = useState(1);
+//  const [value , setValue] = useState(1);
  const navigate = useNavigate();
  
  function submitHandler(e)
@@ -21,13 +21,13 @@ const AddTeam = () => {
         type: 'ADD_TEAM',
         payload: {
           teamName: teamName,
-          totalPlayers: value
+          // totalPlayers: value
         }
       }
     );
 
     setTeamName("");
-    setValue(1);
+    // setValue(1);
 
  }
 
@@ -59,10 +59,11 @@ const AddTeam = () => {
                  value={teamName}
                  onChange={(e)=> setTeamName(e.target.value)}                
                  className='border border-b-black border-white p-1'
+                 required
                  />
               </div>
 
-              <div className='flex gap-5'>
+              {/* <div className='flex gap-5'>
                  <label>Total Players</label>
                   <input
                     type="number"
@@ -72,7 +73,7 @@ const AddTeam = () => {
                     onChange={(e) => setValue(Number(e.target.value))}
                      className='border border-black rounded-lg p-1 w-12'
                   />
-              </div>
+              </div> */}
 
           <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>Create Team</button>   
 

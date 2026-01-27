@@ -10,7 +10,7 @@ import { AppContext } from '../../context/AppContext.jsx';
 
 const TeamContent = () => {
 
-  const {state} = useContext(AppContext);
+  const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
     
   return (
@@ -33,13 +33,15 @@ const TeamContent = () => {
             state.teams.map( (team)=> (
             
             <div key={team.id} className='flex justify-between cursor-pointer bg-white border border-b-gray-300 shadow-sm rounded-md items-center px-5 py-2'
-             onClick={()=> navigate('/teams/teamdetails')}>
+             onClick={()=> {
+              dispatch({type:'SET_CURRENT_TEAM' , payload:team.id})
+              navigate('/teams/teamdetails')}}>
              
              <div className='flex gap-5' >
                     <img src={defaultImage} alt='logo' className='w-10 h-10 rounded-full'/>
                 <div>
                    <h2 className='text-md font-semibold'>{team.teamName}</h2>
-                   <span className='text-sm text-gray-800'>{team.totalPlayers} Players</span>
+                   {/* <span className='text-sm text-gray-800'>{team.totalPlayers} Players</span> */}
                 </div>
              </div>
 

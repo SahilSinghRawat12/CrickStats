@@ -8,12 +8,11 @@ import { AppContext } from '../context/AppContext';
 
 const AddingPlayers = () => {
 
-   const [state , dispatch] = useContext(AppContext);
+   const {state , dispatch} = useContext(AppContext);
 
-    const [isActiveIndex , setIsActiveIndex] = useState(0);
-    const [isActive , setIsActive] = useState(false);
+    const [isActiveIndex , setIsActiveIndex] = useState(null);
     const [name , setName] = useState("");
-    const [categorys , setCategorys] = useState("");
+    const [role , setRole] = useState("");
     const [captain , setCaptain] = useState(false);
 
     const navigate = useNavigate();
@@ -23,8 +22,25 @@ const AddingPlayers = () => {
     {
       event.preventDefault();
 
-       
+       // VALIDATION GOES HERE
+        if (!role) {
+          alert("Please select a player role");
+          return;
+        }
 
+       dispatch({
+         type:'ADD_PLAYER',
+         payload: {
+            playerName: name,
+            playerRole: role,
+            isCaptain: captain
+         }
+       });
+
+       setName("");
+       setRole("");
+       setCaptain(false);
+       setIsActiveIndex(null);
     }
 
   return (
@@ -34,7 +50,7 @@ const AddingPlayers = () => {
             bg-white'
             onSubmit={submitHandler} >
 
-              <h1 className='text-2xl'>Add New Player</h1>
+              <h1 className='text-2xl'>Add New Player</h1>  
 
                 <div className='left-5 top-5 absolute cursor-pointer' 
                 onClick={()=> {navigate(-1) || navigate('/teams/teamdetails')}}>
@@ -53,33 +69,32 @@ const AddingPlayers = () => {
                  name = "name"
                  value={name}
                  onChange={(e) => setName(e.target.value)}
+                 
                  />
               </div>
 
                   <div className='flex gap-8 px-2 py-2'>
                     {
                       category.map((cat , index) => (
-                        <button key={index}
+                        <div key={index}
                          onClick={(e)=> { setIsActiveIndex(index)
-                                   setCategorys(e.target.value)
+                                   setRole(cat.category)
                          }}
-                        className={`border border-black py-2 px-4 rounded-xl transition-colors duration-200 hover:bg-black hover:text-white
+                        className={`border border-black py-2 px-4 rounded-xl cursor-pointer transition-colors duration-200 hover:bg-black hover:text-white
                         ${isActiveIndex === index ? "bg-black text-white" : "bg-white text-black"}`}>
                           {cat.category}
-                        </button>
+                        </div>
                       ))
                     }
                   </div> 
 
                   <div className='px-2 py-2'>
-                     <button 
-                      onClick={() => {setIsActive(!isActive)
-                                setCaptain( prev => !prev)
-                      }}
-                      className={`border border-black py-2 px-4 rounded-xl  transition-colors duration-200 hover:bg-blue-800 hover:text-white
-                      ${isActive ? "bg-blue-800 text-white" : "bg-white text-black"}`}>
+                     <div 
+                      onClick={() => setCaptain( prev => !prev) }
+                      className={`border border-black py-2 px-4 rounded-xl  transition-colors cursor-pointer duration-200 hover:bg-blue-800 hover:text-white
+                       ${captain ? "bg-blue-800 text-white" : "bg-white text-black"}`}>
                       Captain
-                      </button>
+                      </div>
                   </div>  
 
                   <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>Save</button>   
