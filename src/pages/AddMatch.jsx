@@ -6,13 +6,21 @@ import { AppContext } from '../context/AppContext'
 
 const AddMatch = () => {
 
- const {state} = useContext(AppContext);
+ const {state , dispatch} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
  const [value , setValue] = useState(1);
  const navigate = useNavigate();
 
  const [teamA , setTeamA] = useState(null);
  const [teamB , setTeamB] = useState(null);
+
+ const [formData , setFormData] = useState({
+    overs : "" , 
+    date : "",
+    tossWinner: null,
+    tossDecision: ""
+
+ })
  
  function submitHandler(e)
  {
@@ -24,7 +32,37 @@ const AddMatch = () => {
     return;
     }
 
+    dispatch({
+       type: 'CREATE_MATCH',
+       payload: {
+        teamAId: teamA,
+        teamBId: teamB,
+        overs: formData.overs,
+        date: formData.date,
+        tossWinnerId: formData.tossWinner,
+        tossDecision: formData.tossDecision
+       }
+    })
+
+
+    navigate('/matches');
+
  }
+
+ function changeHandler(e)
+ {
+     const {name , value} = e.target;
+
+     setFormData((prev) => ({
+        ...prev,
+        [name]: value
+     }));
+ }
+
+  
+ 
+
+ 
 
  
 
@@ -48,10 +86,11 @@ const AddMatch = () => {
                    <div className='flex flex-col gap-y-2'>
                     <label>Select Team A</label>
                     <select className="border border-black p-2 rounded "
+                    required
                     value={teamA ?? ""}
                     onChange={(e) => setTeamA(Number(e.target.value))}
                     >
-                        <option disabled hidden>Select Team</option>
+                        <option value="" disabled hidden>Select Team</option>
                         {
                         state.teams.map((team) => (
                             <option key={team.id}
@@ -67,9 +106,11 @@ const AddMatch = () => {
                   <div className='flex flex-col gap-y-2'>
                     <label>Select Team B</label>
                     <select className="border border-black p-2 rounded "
+                    required
                     value={teamB ?? ""}
                     onChange={(e)=> setTeamB(Number(e.target.value))}>
-                        <option disabled hidden>Select Team</option>
+                       
+                        <option value="" disabled hidden>Select Team</option>
                         {
                         state.teams.map((team) => (
                             <option key={team.id}
@@ -92,8 +133,13 @@ const AddMatch = () => {
                         <h1 className='text-md font-bold'>Overs</h1>
 
                         <input 
-                        type='text'
+                        required
+                        type='number'
+                        min={1}
+                        name='overs'
+                        value={formData.overs}
                         placeholder='Overs'
+                        onChange={changeHandler}
                         className='border border-black p-2 rounded  '/>
                         </div>
 
@@ -102,8 +148,11 @@ const AddMatch = () => {
                         <h1 className='text-md font-bold'>Match Date</h1>
 
                         <input 
+                        required
                         type='date'
-                        placeholder='Overs'
+                        name='date'
+                        value={formData.date}
+                        onChange={changeHandler}
                         className='border border-black p-2 rounded  '/>
                         </div>
 
@@ -118,23 +167,41 @@ const AddMatch = () => {
                         </div>
 
                         <div className='flex px-5 justify-between   py-2'>
-                            <select>
-                                <option>
-                                    {teamA}
+                            <select 
+                            required
+                            name='tossWinner'
+                            value={formData.tossWinner ?? ""}
+                            onChange={changeHandler}>
+                                 <option value="" disabled hidden>Select Team</option>
+                               
+                               { teamA &&  
+                                (<option value={teamA}>
+                                    {state.teams.find( t => t.id === teamA)?. teamName}
                                 </option>
-                                <option>
-                                    {teamB}
-                                </option>
+                                )}
+
+                                { teamB &&
+                                    (<option value={teamB}>
+                                    {state.teams.find( t => t.id === teamB)?. teamName}
+                                     </option>
+                                )
+                                }
                             </select>
-                             <select className="border border-black rounded w-20 py-1 ">
+
+                             <select className="border border-black rounded w-20 py-1 "
+                             required
+                             name='tossDecision'
+                             value={formData.tossDecision}
+                             onChange={changeHandler}
+                             >
+                                <option value="" hidden disabled>Select</option>
                                 <option>Bat</option>
                                 <option>Bowl</option>
                              </select>
                         </div>
                    </div>
 
-              <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'
-              onClick={()=> navigate('/live_match')}>
+              <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>
                 Create Match
               </button>   
 

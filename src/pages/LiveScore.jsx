@@ -1,13 +1,32 @@
-import React from "react";
+import React, { useContext } from "react";
 import { battingPlayers, bowlingPlayers } from "../data/data";
+import { AppContext } from "../context/AppContext";
+import { MdArrowBackIosNew } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 const LiveScore = () => {
+
+  const {state} = useContext(AppContext);
+  const navigate = useNavigate();
+
+  const currentMatch = state.matches.find( (match) => match.id === state.currentMatchId);
+  const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
+  const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
+
   return (
-    <div className="w-full min-h-screen px-10 py-8 bg-gray-50">
+    <div className="w-full min-h-screen px-12 py-8 bg-gray-50">
+      <div className='left-5 top-5 absolute cursor-pointer' 
+                      onClick={()=> {navigate(-1) || navigate('/matches')}}>
+                      <MdArrowBackIosNew/>
+                    </div>
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">MI vs CSK</h1>
+        <h1 className="text-2xl font-bold">
+          {teamA?.teamName}
+          <div>vs</div>
+          {teamB?.teamName}
+        </h1>
         <p className="text-gray-600 mt-1">
           Innings 1 of 2 · Batting: MI · Bowling: CSK · 20 Overs
         </p>

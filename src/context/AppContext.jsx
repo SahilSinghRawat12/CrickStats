@@ -11,6 +11,7 @@ export default function AppContextProvider({children})
         matches: [],
         currentMatch: null,
         currentTeamId: null,
+        currentMatchId: null,
         stats : {
             totalRuns: 0,
             totalMatches: 0
@@ -65,7 +66,28 @@ export default function AppContextProvider({children})
                 players: state.players.filter( (p)=> p.id !== action.payload)
                 
             };
+
+            case "CREATE_MATCH" : return  {
+                ...state,
+                matches: [
+                    ...state.matches,
+                    {
+                        id: Date.now(),     //unique match id
+                        teamAId: action.payload.teamAId,
+                        teamBId: action.payload.teamBId,
+                        overs: Number(action.payload.overs),
+                        date: action.payload.date,
+                        tossWinnerId: action.payload.tossWinnerId,
+                        tossDecision: action.payload.tossDecision
+
+                    }
+                ]
+            };
                 
+            case "SET_CURRENT_MATCH" : return {
+                ...state,
+                currentMatchId: action.payload
+            }
              
         
             default: return state

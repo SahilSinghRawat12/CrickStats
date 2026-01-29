@@ -1,13 +1,19 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { CiSquarePlus } from "react-icons/ci";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { NavLink, useNavigate } from 'react-router-dom';
+import { AppContext } from '../../context/AppContext';
 
 
 
 const MatchContent = () => {
 
+    const {state , dispatch} = useContext(AppContext);
     const navigate = useNavigate();
+    
+
+
+ 
 
   return (
     <div className='w-full pl-16 '>
@@ -21,31 +27,37 @@ const MatchContent = () => {
                </button>
            </div>
    
-           <div className='mt-16 grid grid-cols-3 w-[80%] gap-x-10  '>
-              
-               <div className='flex flex-col border border-gray-300 justify-center items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>
-                  <span className='text-2xl font-semibold'>MI vs CSK</span>
-                  <span className='text-md '>Winner : CSK</span>
-                  <NavLink to='/matches/details'>
-                  <span className='text-sm  hover:text-blue-900 hover:font-semibold'>View Details</span>
-                  </NavLink>
-               </div>
+           <div className='mt-16 grid grid-cols-3 w-[80%] gap-x-10  '>      
+                 
+               {
+                  state.matches.map( (match) =>  {
+                    const teamA = state.teams.find( (team) => team.id === match.teamAId);
+                    const teamB = state.teams.find( (team) => team.id === match.teamBId);
+                    
+                    return (
+                        <div className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>  
+                         <span key={match.id} className='text-2xl text-center font-medium'>
+                            {teamA?.teamName} 
+                            <div>vs</div> 
+                            {teamB?.teamName}</span>
+                             {/* <span className='text-md '>Winner : CSK</span> */}
 
-               <div className='flex flex-col border border-gray-300 justify-center items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>
-                  <span className='text-2xl font-semibold'>MI vs CSK</span>
-                  <span className='text-md '>Winner : CSK</span>
-                  <NavLink>
-                  <span className='text-sm hover:text-blue-900 hover:font-semibold'>View Details</span>
-                  </NavLink>
-               </div>
+                        <span className='text-sm  hover:text-blue-900 hover:font-semibold' onClick={ 
+                            () => {
+                                dispatch({
+                                    type: 'SET_CURRENT_MATCH',
+                                    payload: match.id
+                                });
 
-               <div className='flex flex-col border border-gray-300 justify-center items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>
-                  <span className='text-2xl font-semibold'>MI vs CSK</span>
-                  <span className='text-md '>Winner : CSK</span>
-                  <NavLink>
-                  <span className='text-sm  hover:text-blue-900 hover:font-semibold '>View Details</span>
-                  </NavLink>
-               </div>
+                                navigate('/matches/live_match');
+                            }
+                        }>View Details</span>
+                         </div>
+                      )
+                       
+                        })
+               }
+   
            </div>
        </div>
   )

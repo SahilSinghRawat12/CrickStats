@@ -34,7 +34,7 @@ function App() {
            <Route path='/matches/create_match' element={<AddMatch/>} />
            <Route path='/matches/details' element={<ScoreCard/>} />
            <Route path='/players' element={<Players/>} />
-           <Route path='/live_match' element={<LiveScore/>} />
+           <Route path='/matches/live_match' element={<LiveScore/>} />
 
         </Routes>
     </div>
