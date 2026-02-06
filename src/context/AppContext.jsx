@@ -55,7 +55,8 @@ export default function AppContextProvider({children})
                          id: Date.now(),
                          playerName: action.payload.playerName,
                          playerRole: action.payload.playerRole,
-                         isCaptain: action.payload.isCaptain
+                         isCaptain: action.payload.isCaptain,
+                         teamId: state.currentTeamId
                     }
                 ]
             };

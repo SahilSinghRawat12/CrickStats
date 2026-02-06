@@ -12,7 +12,8 @@ const TeamContent = () => {
 
   const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
-    
+
+ 
   return (
     <div className='w-full pl-16 '>
         <div className='flex items-center w-[80%] mt-10 justify-between'>
@@ -30,8 +31,14 @@ const TeamContent = () => {
         <div className='mt-12 flex flex-col w-[80%]   gap-y-5 '>
  
           {
-            state.teams.map( (team)=> (
-            
+            state.teams.map( (team)=> {
+
+              const totalPlayers = state.players.filter(
+                player => player.teamId === team.id
+              ).length;
+
+              return(
+                 
             <div key={team.id} className='flex justify-between cursor-pointer bg-white border border-b-gray-300 shadow-sm rounded-md items-center px-5 py-2'
              onClick={()=> {
               dispatch({type:'SET_CURRENT_TEAM' , payload:team.id})
@@ -41,7 +48,7 @@ const TeamContent = () => {
                     <img src={defaultImage} alt='logo' className='w-10 h-10 rounded-full'/>
                 <div>
                    <h2 className='text-md font-semibold'>{team.teamName}</h2>
-                   {/* <span className='text-sm text-gray-800'>{team.totalPlayers} Players</span> */}
+                   <span className='text-sm text-gray-800'>{totalPlayers} Players</span>
                 </div>
              </div>
 
@@ -49,8 +56,8 @@ const TeamContent = () => {
                     <MdOutlineKeyboardArrowRight/>
                 </div>
             </div>
-             
-            ))  
+              )   
+          })  
           }
 
         </div>

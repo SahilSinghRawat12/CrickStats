@@ -3,6 +3,8 @@ import { MdArrowBackIosNew } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
 import { teamsNames } from '../data/data'
 import { AppContext } from '../context/AppContext'
+import toast from 'react-hot-toast'
+
 
 const AddMatch = () => {
 
@@ -26,9 +28,25 @@ const AddMatch = () => {
  {
     e.preventDefault();
 
+    if(state.players.filter(
+        player => player.teamId === teamA
+    ).length < 1)
+    {
+        toast.error("There should be atleast 1 or more players on teamA")
+        return;
+    }
+
+    if(state.players.filter(
+        player => player.teamId === teamB
+    ).length < 1)
+    {
+        toast.error("There should be atleast 1 or more players on teamB")
+        return;
+    }
+
     //double check for safety
     if (teamA === teamB) {
-    alert("Team A and Team B cannot be the same");
+    toast.error("Team A and Team B cannot be the same");
     return;
     }
 
@@ -43,6 +61,8 @@ const AddMatch = () => {
         tossDecision: formData.tossDecision
        }
     })
+
+
 
 
     navigate('/matches');

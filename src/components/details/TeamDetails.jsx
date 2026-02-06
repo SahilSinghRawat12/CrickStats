@@ -15,6 +15,10 @@ const TeamDetails = () => {
   const currentTeam = state.teams.find(
     (team) => team.id === state.currentTeamId
   );
+
+  const teamPlayers = state.players.filter(
+    player => player.teamId === state.currentTeamId
+  );
   
   return (
     <div className='w-full relative pl-16'>
@@ -40,20 +44,20 @@ const TeamDetails = () => {
 
                      <div className='ml-5 '>
                           <div className="border border-gray-300 p-5 grid grid-cols-[2fr_2fr_40px_40px] items-center">
-                            <span className="text-lg">Player</span>
-                            <span className="text-lg text-center">Role</span>
+                            <span className="text-lg font-bold">Player</span>
+                            <span className="text-lg text-center font-bold">Role</span>
                             <span></span>
                             <span></span>
                           </div>
 
 
-                          {state.players.map((player) => (
+                          {teamPlayers.map((player) => (
                                 <div
                                   key={player.id}
                                   className="border border-gray-300 p-4 grid grid-cols-[2fr_2fr_40px_40px] items-center"
                                 >
                                   {/* Player name */}
-                                  <span>{player.playerName}</span>
+                                  <span className='capitalize'>{player.playerName}</span>
 
                                   {/* Role */}
                                   <span className="text-center">{player.playerRole}</span>
