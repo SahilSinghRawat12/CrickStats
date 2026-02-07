@@ -57,12 +57,10 @@ const AddMatch = () => {
         teamBId: teamB,
         overs: formData.overs,
         date: formData.date,
-        tossWinnerId: formData.tossWinner,
+        tossWinnerId: Number(formData.tossWinner),
         tossDecision: formData.tossDecision
        }
     })
-
-
 
 
     navigate('/matches');

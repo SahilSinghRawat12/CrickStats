@@ -65,6 +65,7 @@ const AddingPlayers = () => {
                 <label>Player Name</label>
                  <input 
                  placeholder='Enter Player Name'
+                 required
                  className='border border-b-black border-white p-1'
                  name = "name"
                  value={name}

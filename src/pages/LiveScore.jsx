@@ -13,6 +13,16 @@ const LiveScore = () => {
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
   const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
 
+  const tossWinner = state.teams.find( team => team.id === currentMatch?.tossWinnerId)
+  const tossLoser = state.teams.find( team => team.id !== currentMatch?.tossWinnerId )
+
+  console.log(currentMatch);
+  console.log(tossWinner);
+  console.log(tossLoser);
+  
+  
+  
+
   return (
     <div className="w-full min-h-screen px-12 py-8 bg-gray-50">
       <div className='left-5 top-5 absolute cursor-pointer' 
@@ -28,7 +38,7 @@ const LiveScore = () => {
           {teamB?.teamName}
         </h1>
         <p className="text-gray-600 mt-1">
-          Innings 1 of 2 · Batting: MI · Bowling: CSK · 20 Overs
+          Innings 1 of 2 · Batting: <span className="capitalize font-bold">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</span> · Bowling: <span className="capitalize font-bold">{(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</span> · 20 Overs
         </p>
       </div>
 

@@ -35,7 +35,7 @@ const MatchContent = () => {
                     const teamB = state.teams.find( (team) => team.id === match.teamBId);
                     
                     return (
-                        <div className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>  
+                        <div key={match.id} className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>  
                          <span key={match.id} className='text-2xl text-center font-medium'>
                             {teamA?.teamName} 
                             <div>vs</div> 
