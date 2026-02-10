@@ -13,14 +13,16 @@ const LiveScore = () => {
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
   const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
 
-  const tossWinner = state.teams.find( team => team.id === currentMatch?.tossWinnerId)
-  const tossLoser = state.teams.find( team => team.id !== currentMatch?.tossWinnerId )
+  const teamAPlayers = state.players.filter( p => p.teamId === teamA.id)
+  const teamBPlayers = state.players.filter(p => p.teamId === teamB.id)
 
-  console.log(currentMatch);
-  console.log(tossWinner);
-  console.log(tossLoser);
-  
-  
+   const teamBbowlers = teamBPlayers.filter( bowler => (bowler.playerRole === "Bowler" || bowler.playerRole === "All Rounder"))
+
+  const tossWinner = state.teams.find( team => team.id === currentMatch?.tossWinnerId)
+
+  const tossLoserId = currentMatch.tossWinnerId === currentMatch.teamAId ? currentMatch.teamBId : currentMatch.teamAId;
+
+  const tossLoser = state.teams.find( team => team.id === tossLoserId)
   
 
   return (
@@ -32,19 +34,23 @@ const LiveScore = () => {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-2xl font-bold capitalize">
           {teamA?.teamName}
           <div>vs</div>
           {teamB?.teamName}
         </h1>
         <p className="text-gray-600 mt-1">
-          Innings 1 of 2 · Batting: <span className="capitalize font-bold">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</span> · Bowling: <span className="capitalize font-bold">{(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</span> · 20 Overs
+          Innings 1 of 2 · <span className="capitalize font-bold">Batting: </span> 
+            <span className="capitalize">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</span> 
+            · <span className="font-bold">Bowling: </span> 
+            <span className="capitalize">{(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</span> 
+            · <span className="font-bold">{currentMatch.overs} Over</span>
         </p>
       </div>
 
       {/* Score Summary */}
       <div className="bg-white border rounded-lg p-4 mb-8">
-        <h2 className="text-xl font-semibold">MI 125/3 (14.2)</h2>
+        <h2 className="text-xl font-semibold capitalize">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)} - 125/3 (14.2)</h2>
         <p className="text-gray-500 mt-1">Target: —</p>
       </div>
 
@@ -53,7 +59,7 @@ const LiveScore = () => {
 
         {/* Batting */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4">Batting — MI</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Batsman</span>
@@ -66,9 +72,9 @@ const LiveScore = () => {
             </div>
           </div>
 
-          {battingPlayers.map((p, i) => (
-            <div key={i} className="py-3 flex border-b last:border-none">
-              <span className="w-1/2">{p.name}</span>
+          {teamAPlayers.map((p) => (
+            <div key={p.id} className="py-3 flex border-b last:border-none">
+              <span className="w-1/2">{p.playerName}</span>
               <div className="flex w-1/2 text-center">
                 <span className="w-full">{p.runs}</span>
                 <span className="w-full">{p.balls}</span>
@@ -82,7 +88,7 @@ const LiveScore = () => {
 
         {/* Bowling */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4">Bowling — CSK</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Bowler</span>
@@ -94,9 +100,10 @@ const LiveScore = () => {
             </div>
           </div>
 
-          {bowlingPlayers.map((b, i) => (
-            <div key={i} className="py-3 flex border-b last:border-none">
-              <span className="w-1/2">{b.name}</span>
+          {teamBbowlers.map((b) => (
+
+               <div key={b.id} className="py-3 flex border-b last:border-none">
+              <span className="w-1/2">{b.playerName}</span>
               <div className="flex w-1/2 text-center">
                 <span className="w-full">{b.overs}</span>
                 <span className="w-full">{b.runs}</span>
@@ -104,6 +111,8 @@ const LiveScore = () => {
                 <span className="w-full">{b.er}</span>
               </div>
             </div>
+            
+           
           ))}
         </div>
       </div>
