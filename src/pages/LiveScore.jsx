@@ -5,14 +5,27 @@ import { useNavigate } from "react-router-dom";
 
 const LiveScore = () => {
 
-  const {state} = useContext(AppContext);
+  const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
 
   const currentMatch = state.matches.find( (match) => match.id === state.currentMatchId);
  
-  if (!currentMatch) {
-  return <div>No active match</div>;
+if (!currentMatch) {
+  return (
+    <div className="w-full h-screen flex flex-col items-center justify-center gap-6">
+      <h1 className="text-2xl font-semibold">No Active Match</h1>
+
+      <button
+        onClick={() => navigate('/matches')}
+        className="px-6 py-2 bg-blue-600 text-white rounded-md
+                   hover:bg-blue-700 transition-colors"
+      >
+        Back to Matches
+      </button>
+    </div>
+  );
 }
+
 
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
   const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
@@ -133,6 +146,12 @@ const LiveScore = () => {
           {[0, 1, 2, 3, 4, 6].map((run) => (
             <button
               key={run}
+              onClick={ () => 
+                dispatch({
+                  type: "ADD_RUN",
+                  payload: { runs: run}
+                })
+              }
               className="px-6 py-2 bg-white border rounded-md
                          hover:bg-black hover:text-white
                          transition-colors duration-200"
