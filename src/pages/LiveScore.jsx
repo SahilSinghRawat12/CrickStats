@@ -1,5 +1,4 @@
 import React, { useContext } from "react";
-import { battingPlayers, bowlingPlayers } from "../data/data";
 import { AppContext } from "../context/AppContext";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
@@ -10,20 +9,30 @@ const LiveScore = () => {
   const navigate = useNavigate();
 
   const currentMatch = state.matches.find( (match) => match.id === state.currentMatchId);
+ 
+  if (!currentMatch) {
+  return <div>No active match</div>;
+}
+
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
   const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
 
-  const teamAPlayers = state.players.filter( p => p.teamId === teamA.id)
-  const teamBPlayers = state.players.filter(p => p.teamId === teamB.id)
-
-   const teamBbowlers = teamBPlayers.filter( bowler => (bowler.playerRole === "Bowler" || bowler.playerRole === "All Rounder"))
-
-  const tossWinner = state.teams.find( team => team.id === currentMatch?.tossWinnerId)
-
   const tossLoserId = currentMatch.tossWinnerId === currentMatch.teamAId ? currentMatch.teamBId : currentMatch.teamAId;
 
-  const tossLoser = state.teams.find( team => team.id === tossLoserId)
+
+  const battingTeamId = currentMatch?.tossDecision === "Bat" ? currentMatch?.tossWinnerId : tossLoserId;
+  const bowlingTeamId = currentMatch?.tossDecision === "Bat" ? tossLoserId :currentMatch?.tossWinnerId;
   
+  const battingTeam = state.teams.find( t => t.id === battingTeamId);
+  const bowlingTeam = state.teams.find( t => t.id === bowlingTeamId);
+
+  const battingTeamName = battingTeam?.teamName || "";
+  const bowlingTeamName = bowlingTeam?.teamName || "";
+
+  const battingTeamPlayers = state.players.filter(p => p.teamId === battingTeamId)
+  const bowlingTeamPlayers = state.players.filter(p => p.teamId === bowlingTeamId)
+
+  const bowlers =  bowlingTeamPlayers.filter( p => p.playerRole === "Bowler" || p.playerRole === "All Rounder"  )
 
   return (
     <div className="w-full min-h-screen px-12 py-8 bg-gray-50">
@@ -41,16 +50,16 @@ const LiveScore = () => {
         </h1>
         <p className="text-gray-600 mt-1">
           Innings 1 of 2 · <span className="capitalize font-bold">Batting: </span> 
-            <span className="capitalize">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</span> 
+            <span className="capitalize">{battingTeamName}</span> 
             · <span className="font-bold">Bowling: </span> 
-            <span className="capitalize">{(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</span> 
+            <span className="capitalize">{bowlingTeamName}</span> 
             · <span className="font-bold">{currentMatch.overs} Over</span>
         </p>
       </div>
 
       {/* Score Summary */}
       <div className="bg-white border rounded-lg p-4 mb-8">
-        <h2 className="text-xl font-semibold capitalize">{(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)} - 125/3 (14.2)</h2>
+        <h2 className="text-xl font-semibold capitalize">{battingTeam?.teamName} - 125/3 (14.2)</h2>
         <p className="text-gray-500 mt-1">Target: —</p>
       </div>
 
@@ -59,7 +68,7 @@ const LiveScore = () => {
 
         {/* Batting */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {(currentMatch.tossDecision === "Bat") ? (tossWinner?.teamName) : (tossLoser?.teamName)}</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {battingTeam?.teamName}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Batsman</span>
@@ -72,15 +81,15 @@ const LiveScore = () => {
             </div>
           </div>
 
-          {teamAPlayers.map((p) => (
+          {battingTeamPlayers.map((p) => (
             <div key={p.id} className="py-3 flex border-b last:border-none">
               <span className="w-1/2">{p.playerName}</span>
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{p.runs}</span>
-                <span className="w-full">{p.balls}</span>
-                <span className="w-full">{p.fours}</span>
-                <span className="w-full">{p.sixes}</span>
-                <span className="w-full">{p.sr}</span>
+                <span className="w-full">{p.runs ?? 0}</span>
+                <span className="w-full">{p.balls ?? 0}</span>
+                <span className="w-full">{p.fours ?? 0}</span>
+                <span className="w-full">{p.sixes ?? 0}</span>
+                <span className="w-full">{p.sr ?? 0}</span>
               </div>
             </div>
           ))}
@@ -88,7 +97,7 @@ const LiveScore = () => {
 
         {/* Bowling */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {(currentMatch.tossDecision === "Bowl") ? (tossWinner.teamName) : (tossLoser?.teamName)}</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {bowlingTeam?.teamName}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Bowler</span>
@@ -100,15 +109,15 @@ const LiveScore = () => {
             </div>
           </div>
 
-          {teamBbowlers.map((b) => (
+          {bowlers.map((b) => (
 
                <div key={b.id} className="py-3 flex border-b last:border-none">
               <span className="w-1/2">{b.playerName}</span>
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{b.overs}</span>
-                <span className="w-full">{b.runs}</span>
-                <span className="w-full">{b.wickets}</span>
-                <span className="w-full">{b.er}</span>
+                <span className="w-full">{b.overs ?? 0}</span>
+                <span className="w-full">{b.runs ?? 0}</span>
+                <span className="w-full">{b.wickets ?? 0}</span>
+                <span className="w-full">{b.er ?? 0}</span>
               </div>
             </div>
             
