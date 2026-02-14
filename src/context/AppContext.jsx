@@ -69,12 +69,14 @@ export default function AppContextProvider({children})
 
             case "CREATE_MATCH" : 
             
+            const matchId = Date.now();
+            
             const tossWinnerId = action.payload.tossWinnerId
 
             const tossLoserId =
                  tossWinnerId === action.payload.teamAId
                  ? action.payload.teamBId
-                 : action.payload.teamBId;
+                 : action.payload.teamAId;
 
             const battingTeamId = 
              action.payload.tossDecision === "Bat"
@@ -91,7 +93,7 @@ export default function AppContextProvider({children})
                 matches: [
                     ...state.matches,
                     {
-                        id: Date.now(),     //unique match id
+                        id: matchId,     //unique match id
                         teamAId: action.payload.teamAId,
                         teamBId: action.payload.teamBId,
                         overs: Number(action.payload.overs),
@@ -108,6 +110,8 @@ export default function AppContextProvider({children})
                                 runs: 0,
                                 wickets: 0,
                                 balls: 0,
+                                oversCompleted: 0,
+                                ballsInOver: 0,
                                 strikerId: null,
                                 nonStrikerId: null,
                                 bowlerId: null,
@@ -138,11 +142,63 @@ export default function AppContextProvider({children})
                 const inningsIndex = match.currentInnings - 1;
                 const innings = match.innings[inningsIndex];
 
+                const strikerId = innings.strikerId;
+
+                // if striker stats exist or default stats
+                const strikerStats = innings.battingStats[strikerId] || {
+                    runs: 0,
+                    balls: 0,
+                    fours: 0,
+                    sixes: 0,
+                    sr: 0
+                };
+
+                const newRuns = strikerStats.runs + runs;
+                const newBalls = strikerStats.balls + 1;
+                
+                const  updatedStrikerStats = {
+                    ...strikerStats,
+                    runs: newRuns,
+                    balls: newBalls,
+                    fours: runs === 4 ? strikerStats.fours + 1 : strikerStats.fours,
+                    sixes: runs === 6 ? strikerStats.sixes + 1 : strikerStats.sixes,
+                    sr: ((newRuns / newBalls) * 100).toFixed(2)
+                };
+
+                const updatedBattingStats = {
+                    ...innings.battingStats,
+                    [strikerId]: updatedStrikerStats
+                };
+
+                let newStrikerId = innings.strikerId;
+                let newNonStrikerId = innings.nonStrikerId;
+
+                const newBallForOver = innings.balls + 1;
+                const oversCompleted = Math.floor(newBallForOver / 6);
+                const ballsInOver = newBallForOver % 6;
+
+                if(runs === 1 || runs === 3)
+                {
+                    newStrikerId = innings.nonStrikerId;
+                    newNonStrikerId = innings.strikerId;
+                }
+
+                if(newValueOfBall % 6 === 0)
+                {
+                    newStrikerId = innings.nonStrikerId;
+                    newNonStrikerId = innings.strikerId;
+                }
+
                 // 3. Increase score and balls
                 const updatedInnings = {
                 ...innings,
                 runs: innings.runs + runs,
-                balls: innings.balls + 1
+                balls: newBallForOver,
+                oversCompleted,
+                ballsInOver,
+                strikerId: newStrikerId,
+                nonStrikerId: newNonStrikerId,
+                battingStats: updatedBattingStats
                 };
 
                 // 4. Put updated innings back into innings array

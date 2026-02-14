@@ -1,15 +1,17 @@
-import React, { useContext } from "react";
+import React, { useContext , useState } from "react";
 import { AppContext } from "../context/AppContext";
 import { MdArrowBackIosNew } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 
 const LiveScore = () => {
 
   const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
 
+  const [showWicketMenu, setShowWicketMenu] = useState(false);
+
   const currentMatch = state.matches.find( (match) => match.id === state.currentMatchId);
- 
+
 if (!currentMatch) {
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center gap-6">
@@ -25,6 +27,12 @@ if (!currentMatch) {
     </div>
   );
 }
+
+  const currentInnings = currentMatch.innings?.[currentMatch.currentInnings - 1];
+
+  const totalBalls = currentInnings?.balls ?? 0;
+   
+  const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
 
 
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
@@ -72,7 +80,7 @@ if (!currentMatch) {
 
       {/* Score Summary */}
       <div className="bg-white border rounded-lg p-4 mb-8">
-        <h2 className="text-xl font-semibold capitalize">{battingTeam?.teamName} - 125/3 (14.2)</h2>
+        <h2 className="text-xl font-semibold capitalize">{battingTeam?.teamName} - {currentInnings?.runs ?? 0}/{currentInnings.wickets ?? 0} ({overDisplay})</h2>
         <p className="text-gray-500 mt-1">Target: —</p>
       </div>
 
@@ -162,9 +170,11 @@ if (!currentMatch) {
         </div>
       </div>
 
+     
+
       {/* Extras */}
       <div className="flex gap-3 mb-8">
-        {["Wide", "No-ball", "Byes", "Leg Byes", "Wicket"].map((extra) => (
+        {["Wide", "No-ball"].map((extra) => (
           <button
             key={extra}
             className="px-4 py-2 border rounded bg-white
@@ -174,7 +184,54 @@ if (!currentMatch) {
             {extra}
           </button>
         ))}
+
+         {/* wicket button */}
+
+        <div >
+      <button
+        onClick={() => setShowWicketMenu(prev => !prev)}
+        className="px-4 py-2 border rounded bg-white hover:bg-gray-900 hover:text-white"
+      >
+        Wicket
+      </button>
+
+      {showWicketMenu && (
+        <div className="absolute mt-2 bg-white border rounded shadow p-2 flex flex-col gap-2">
+
+          <button
+            onClick={() => {
+              dispatch({
+                type: "ADD_WICKET",
+                payload: { outPlayerId: currentInnings.strikerId }
+              });
+              setShowWicketMenu(false);
+            }}
+            className="hover:bg-gray-100 px-3 py-1 rounded"
+          >
+            Striker Out
+          </button>
+
+          <button
+            onClick={() => {
+              dispatch({
+                type: "ADD_WICKET",
+                payload: { outPlayerId: currentInnings.nonStrikerId }
+              });
+              setShowWicketMenu(false);
+            }}
+            className="hover:bg-gray-100 px-3 py-1 rounded"
+          >
+            Non-Striker Out
+          </button>
+
+        </div>
+      )}
+    </div>
+        
       </div>
+
+        
+
 
       {/* Actions */}
       <div className="flex gap-4">
