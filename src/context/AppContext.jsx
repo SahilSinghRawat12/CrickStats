@@ -86,7 +86,10 @@ export default function AppContextProvider({children})
              const bowlingTeamId = 
               action.payload.tossDecision === "Bat"
               ? tossLoserId
-              : tossWinnerId;            
+              : tossWinnerId;     
+              
+              const battingPlayers = state.players.filter(p => p.teamId === battingTeamId);
+              const battingOrder = battingPlayers.map(p => p.id);
             
             return  {
                 ...state,
@@ -107,13 +110,21 @@ export default function AppContextProvider({children})
                             {
                                 battingTeamId,
                                 bowlingTeamId,
+                                
                                 runs: 0,
                                 wickets: 0,
+                                
                                 balls: 0,
                                 oversCompleted: 0,
                                 ballsInOver: 0,
-                                strikerId: null,
-                                nonStrikerId: null,
+                                
+                                strikerId: battingOrder[0],
+                                nonStrikerId: battingOrder[1],
+
+                                battingOrder,
+                                nextBatsmanIndex: 2,
+                                dismissedPlayers: [],
+
                                 bowlerId: null,
                                 battingStats: {},
                                 bowlingStats: {}
@@ -183,7 +194,7 @@ export default function AppContextProvider({children})
                     newNonStrikerId = innings.strikerId;
                 }
 
-                if(newValueOfBall % 6 === 0)
+                if(newBallForOver % 6 === 0)
                 {
                     newStrikerId = innings.nonStrikerId;
                     newNonStrikerId = innings.strikerId;
@@ -217,6 +228,55 @@ export default function AppContextProvider({children})
                 ...state,
                 matches
             };
+            }
+
+
+            case 'ADD_WICKET' : {
+
+                const {outPlayerId} = action.payload;
+
+                const matches = state.matches.map(match => {
+                    if(match.id !== state.currentMatchId) return match;
+
+                    const inningsIndex = match.currentInnings - 1;
+                    const innings = match.innings[inningsIndex];
+
+                    const nextPlayerId = innings.battingOrder[innings.nextBatsmanIndex];
+
+                    let newStrikerId = innings.strikerId;
+                    let newNonStrikerId = innings.nonStrikerId;
+
+                    if(outPlayerId === newStrikerId)
+                    {
+                        newStrikerId = nextPlayerId;
+                    } else {
+                        newNonStrikerId = nextPlayerId;
+                    }
+
+                    const updatedInnings = {
+                    ...innings,
+                    wickets: innings.wickets + 1,
+                    strikerId: newStrikerId,
+                    nonStrikerId: newNonStrikerId,
+                    nextBatsmanIndex: innings.nextBatsmanIndex + 1,
+                    dismissedPlayers: [...innings.dismissedPlayers, outPlayerId]
+                    };
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = updatedInnings;
+
+
+                    return {
+                        ...match,
+                        innings: updatedInningsList
+                    };
+
+                });
+
+                return {
+                    ...state,
+                    matches
+                };
             }
 
              

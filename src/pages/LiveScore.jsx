@@ -102,18 +102,37 @@ if (!currentMatch) {
             </div>
           </div>
 
-          {battingTeamPlayers.map((p) => (
-            <div key={p.id} className="py-3 flex border-b last:border-none">
-              <span className="w-1/2">{p.playerName}</span>
+          {battingTeamPlayers.map((p) => {
+
+             const isStriker = p.id === currentInnings.strikerId;
+              const isNonStriker = p.id === currentInnings.nonStrikerId;
+              const isOut = currentInnings.dismissedPlayers.includes(p.id);
+
+              const stats = currentInnings.battingStats[p.id] || {};
+
+            return (
+              <div
+              key={p.id}
+              className={`py-3 flex border-b last:border-none 
+              ${(isStriker || isNonStriker) ? "bg-blue-100" : ""}`}
+              >
+                
+              <span className="w-1/2">
+                {isStriker && "* "}
+                {p.playerName}
+                {isOut && " W"}
+              </span>
+
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{p.runs ?? 0}</span>
-                <span className="w-full">{p.balls ?? 0}</span>
-                <span className="w-full">{p.fours ?? 0}</span>
-                <span className="w-full">{p.sixes ?? 0}</span>
-                <span className="w-full">{p.sr ?? 0}</span>
+                <span className="w-full">{stats.runs ?? 0}</span>
+                <span className="w-full">{stats.balls ?? 0}</span>
+                <span className="w-full">{stats.fours ?? 0}</span>
+                <span className="w-full">{stats.sixes ?? 0}</span>
+                <span className="w-full">{stats.sr ?? 0}</span>
               </div>
             </div>
-          ))}
+             )
+          })}
         </div>
 
         {/* Bowling */}
