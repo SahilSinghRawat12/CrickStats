@@ -140,7 +140,7 @@ export default function AppContextProvider({children})
                 currentMatchId: action.payload
             }
 
-                    case "ADD_RUN": {
+            case "ADD_RUN": {
 
             const { runs } = action.payload;
 
@@ -153,9 +153,13 @@ export default function AppContextProvider({children})
                 const inningsIndex = match.currentInnings - 1;
                 const innings = match.innings[inningsIndex];
 
+                
+                // ❗ Stop scoring if no bowler selected
+                if (!innings.bowlerId) return match;
+
                 const strikerId = innings.strikerId;
 
-                // if striker stats exist or default stats
+                // ---- BATSMAN STATS ----
                 const strikerStats = innings.battingStats[strikerId] || {
                     runs: 0,
                     balls: 0,
@@ -181,12 +185,44 @@ export default function AppContextProvider({children})
                     [strikerId]: updatedStrikerStats
                 };
 
+
+                //---- BOWLER STATS ----
+                const bowlerId = innings.bowlerId;
+
+                const bowlerStats = innings.bowlingStats[bowlerId] || {
+                runs: 0,
+                balls: 0,
+                wickets: 0,
+                // overs: 0,
+                er: 0
+                };
+
+                const newBowlerBalls = bowlerStats.balls + 1;
+                const newBowlerRuns = bowlerStats.runs + runs;
+
+                const updatedBowlerStats = {
+                ...bowlerStats,
+                runs: newBowlerRuns,
+                balls: newBowlerBalls,
+                // overs: Math.floor(newBowlerBalls / 6),
+                er: newBowlerBalls > 0
+                        ? (newBowlerRuns / (newBowlerBalls / 6)).toFixed(2)
+                        : 0
+                };
+
+                const updatedBowlingStats = {
+                ...innings.bowlingStats,
+                [bowlerId]: updatedBowlerStats
+                };
+
+
+                // ---- STRIKE CHANGE ----
                 let newStrikerId = innings.strikerId;
                 let newNonStrikerId = innings.nonStrikerId;
 
                 const newBallForOver = innings.balls + 1;
-                const oversCompleted = Math.floor(newBallForOver / 6);
-                const ballsInOver = newBallForOver % 6;
+                // const oversCompleted = Math.floor(newBallForOver / 6);
+                // const ballsInOver = newBallForOver % 6;
 
                 if(runs === 1 || runs === 3)
                 {
@@ -200,16 +236,19 @@ export default function AppContextProvider({children})
                     newNonStrikerId = innings.strikerId;
                 }
 
+
+                // ---- UPDATE INNINGS ----
                 // 3. Increase score and balls
                 const updatedInnings = {
                 ...innings,
                 runs: innings.runs + runs,
                 balls: newBallForOver,
-                oversCompleted,
-                ballsInOver,
+                // oversCompleted,
+                // ballsInOver,
                 strikerId: newStrikerId,
                 nonStrikerId: newNonStrikerId,
-                battingStats: updatedBattingStats
+                battingStats: updatedBattingStats,
+                 bowlingStats: updatedBowlingStats
                 };
 
                 // 4. Put updated innings back into innings array
@@ -278,6 +317,42 @@ export default function AppContextProvider({children})
                     matches
                 };
             }
+
+
+            case "SET_BOWLER": {
+
+                    const { bowlerId } = action.payload;
+
+                    const matches = state.matches.map(match => {
+
+                        if (match.id !== state.currentMatchId) return match;
+
+                        const inningsIndex = match.currentInnings - 1;
+                        const innings = match.innings[inningsIndex];
+
+                        // allow change only if new over (0 balls)
+                        if (innings.ballsInOver !== 0) return match;
+
+                        const updatedInnings = {
+                        ...innings,
+                        bowlerId
+                        };
+
+                        const updatedInningsList = [...match.innings];
+                        updatedInningsList[inningsIndex] = updatedInnings;
+
+                        return {
+                        ...match,
+                        innings: updatedInningsList
+                        };
+                    });
+
+                    return {
+                        ...state,
+                        matches
+                    };
+                }
+
 
              
         

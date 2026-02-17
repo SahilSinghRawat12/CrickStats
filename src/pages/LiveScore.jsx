@@ -2,6 +2,7 @@ import React, { useContext , useState } from "react";
 import { AppContext } from "../context/AppContext";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate} from "react-router-dom";
+import toast from "react-hot-toast";
 
 const LiveScore = () => {
 
@@ -149,20 +150,60 @@ if (!currentMatch) {
             </div>
           </div>
 
-          {bowlers.map((b) => (
+          {
+          bowlers.map((b) => {
 
-               <div key={b.id} className="py-3 flex border-b last:border-none">
+            const isSelected = b.id === currentInnings.bowlerId;
+            const canChange = currentInnings.ballsInOver === 0;
+
+            // get bowler match stats
+              const stats = currentInnings.bowlingStats[b.id] || {
+                runs: 0,
+                balls: 0,
+                wickets: 0,
+                er: 0
+              };
+
+               // calculate overs from balls
+              const oversCompleted = Math.floor(stats.balls / 6);
+              const ballsInOver = stats.balls % 6;
+              const oversDisplay = `${oversCompleted}.${ballsInOver}`;
+
+              return (
+            
+            <div key={b.id} 
+             onClick={() => {
+              if(!canChange) 
+              {
+                 toast.error("Cannot change bowler before over is completed");
+                 return;
+              }
+
+              dispatch({
+                  type: "SET_BOWLER",
+                  payload: {bowlerId: b.id}
+                 });
+
+                 toast.success("Bowler selected"); 
+             }}
+
+             
+            className={`py-3 flex border-b last:border-none cursor-pointer
+             ${isSelected ? "bg-blue-200" : ""}
+             ${!canChange ? "opacity-60 cursor-not-allowed" : ""}`}>
+
               <span className="w-1/2">{b.playerName}</span>
+
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{b.overs ?? 0}</span>
-                <span className="w-full">{b.runs ?? 0}</span>
-                <span className="w-full">{b.wickets ?? 0}</span>
-                <span className="w-full">{b.er ?? 0}</span>
+                <span className="w-full">{overDisplay}</span>
+                <span className="w-full">{stats.runs}</span>
+                <span className="w-full">{stats.wickets}</span>
+                <span className="w-full">{stats.er}</span>
               </div>
             </div>
-            
-           
-          ))}
+
+              )} )
+              }
         </div>
       </div>
 
