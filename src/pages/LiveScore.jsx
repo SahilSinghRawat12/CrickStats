@@ -33,7 +33,10 @@ if (!currentMatch) {
 
   const totalBalls = currentInnings?.balls ?? 0;
    
-  const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
+  // const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
+  const oversCompleted = Math.floor(currentInnings.balls / 6);
+  const ballsInOver = currentInnings.balls % 6;
+  const overDisplay = `${oversCompleted}.${ballsInOver}`;
 
 
   const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
