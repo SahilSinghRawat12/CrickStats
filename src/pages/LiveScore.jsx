@@ -124,7 +124,7 @@ if (!currentMatch) {
               <span className="w-1/2">
                 {isStriker && "* "}
                 {p.playerName}
-                {isOut && " W"}
+                {isOut && <span className="bg-blue-700 text-white rounded-full ml-3 text-sm p-1 ">W</span>}
               </span>
 
               <div className="flex w-1/2 text-center">
@@ -198,7 +198,7 @@ if (!currentMatch) {
               <span className="w-1/2">{b.playerName}</span>
 
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{overDisplay}</span>
+                <span className="w-full">{oversDisplay}</span>
                 <span className="w-full">{stats.runs}</span>
                 <span className="w-full">{stats.wickets}</span>
                 <span className="w-full">{stats.er}</span>
@@ -217,11 +217,18 @@ if (!currentMatch) {
           {[0, 1, 2, 3, 4, 6].map((run) => (
             <button
               key={run}
-              onClick={ () => 
+              onClick={ () => {
+                
+                  if (!currentInnings.bowlerId) {
+                  toast.error("Select a bowler first");
+                  return;
+                  }
+                  
                 dispatch({
                   type: "ADD_RUN",
                   payload: { runs: run}
-                })
+                });
+              }
               }
               className="px-6 py-2 bg-white border rounded-md
                          hover:bg-black hover:text-white

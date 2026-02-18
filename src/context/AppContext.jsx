@@ -217,17 +217,36 @@ export default function AppContextProvider({children})
 
 
                 // ---- STRIKE CHANGE ----
+                
+                const newBallForOver = innings.balls + 1;
+                const ballsInOver = newBallForOver % 6;
+                const oversCompleted = Math.floor(newBallForOver / 6);
+
+                if (oversCompleted >= match.overs) {
+                    return match;
+                }
+
                 let newStrikerId = innings.strikerId;
                 let newNonStrikerId = innings.nonStrikerId;
 
-                const newBallForOver = innings.balls + 1;
-                // const oversCompleted = Math.floor(newBallForOver / 6);
-                // const ballsInOver = newBallForOver % 6;
 
+                let newBowlerId = innings.bowlerId;
+
+                // if over completed → force selecting new bowler
                 if(runs === 1 || runs === 3)
                 {
                     newStrikerId = innings.nonStrikerId;
                     newNonStrikerId = innings.strikerId;
+                }
+
+                if (ballsInOver === 0) {
+                    //swap strike at the end of over
+                    const temp = newStrikerId;
+                    newStrikerId = newNonStrikerId;
+                    newNonStrikerId = temp;
+
+                    //force new bowler selection
+                     newBowlerId = null;
                 }
 
                 if(newBallForOver % 6 === 0)
@@ -243,10 +262,11 @@ export default function AppContextProvider({children})
                 ...innings,
                 runs: innings.runs + runs,
                 balls: newBallForOver,
-                // oversCompleted,
-                // ballsInOver,
+                ballsInOver,
+                oversCompleted,
                 strikerId: newStrikerId,
                 nonStrikerId: newNonStrikerId,
+                bowlerId: newBowlerId, 
                 battingStats: updatedBattingStats,
                  bowlingStats: updatedBowlingStats
                 };
@@ -292,13 +312,34 @@ export default function AppContextProvider({children})
                         newNonStrikerId = nextPlayerId;
                     }
 
+
+                    // bowling wicket stats 
+                    const bowlerId = innings.bowlerId;
+
+                    const bowlerStats = innings.bowlingStats[bowlerId] || {
+                    runs: 0,
+                    balls: 0,
+                    wickets: 0,
+                    er: 0
+                    };
+
+                    const updatedBowlingStats = {
+                    ...innings.bowlingStats,
+                    [bowlerId]: {
+                        ...bowlerStats,
+                        wickets: bowlerStats.wickets + 1
+                    }
+                    };
+
+                    // updated innings 
                     const updatedInnings = {
                     ...innings,
                     wickets: innings.wickets + 1,
                     strikerId: newStrikerId,
                     nonStrikerId: newNonStrikerId,
                     nextBatsmanIndex: innings.nextBatsmanIndex + 1,
-                    dismissedPlayers: [...innings.dismissedPlayers, outPlayerId]
+                    dismissedPlayers: [...innings.dismissedPlayers, outPlayerId],
+                    bowlingStats: updatedBowlingStats
                     };
 
                     const updatedInningsList = [...match.innings];
