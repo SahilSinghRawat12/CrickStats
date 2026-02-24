@@ -223,7 +223,7 @@ if (!currentMatch) {
                   toast.error("Select a bowler first");
                   return;
                   }
-                  
+                    
                 dispatch({
                   type: "ADD_RUN",
                   payload: { runs: run}
@@ -241,7 +241,6 @@ if (!currentMatch) {
       </div>
 
      
-
       {/* Extras */}
       <div className="flex gap-3 mb-8">
         {["Wide", "No-ball"].map((extra) => (
@@ -315,6 +314,8 @@ if (!currentMatch) {
         <button
           className="px-6 py-2 bg-red-600 text-white rounded-md
                      hover:bg-red-700 transition-colors duration-200"
+
+           onClick={() => dispatch({ type: "END_INNINGS" })}
         >
           Finish Match
         </button>

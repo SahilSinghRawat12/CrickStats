@@ -394,8 +394,73 @@ export default function AppContextProvider({children})
                     };
                 }
 
+                
+                case "END_INNINGS": {
 
-             
+                const matches = state.matches.map(match => {
+
+                    if (match.id !== state.currentMatchId) return match;
+
+                    const inningsIndex = match.currentInnings - 1;
+                    const currentInnings = match.innings[inningsIndex];
+
+                    // if already 2 innings → finish match
+                    if (match.currentInnings === 2) {
+                    return {
+                        ...match,
+                        isFinished: true
+                    };
+                    }
+
+                    // -------- CREATE 2ND INNINGS --------
+
+                    const newBattingTeamId = currentInnings.bowlingTeamId;
+                    const newBowlingTeamId = currentInnings.battingTeamId;
+
+                    // players for new batting team
+                    const battingPlayers = state.players.filter(
+                    p => p.teamId === newBattingTeamId
+                    );
+
+                    const battingOrder = battingPlayers.map(p => p.id);
+
+                    const secondInnings = {
+                    battingTeamId: newBattingTeamId,
+                    bowlingTeamId: newBowlingTeamId,
+
+                    runs: 0,
+                    wickets: 0,
+                    balls: 0,
+                    oversCompleted: 0,
+                    ballsInOver: 0,
+
+                    strikerId: battingOrder[0] || null,
+                    nonStrikerId: battingOrder[1] || null,
+
+                    battingOrder,
+                    nextBatsmanIndex: 2,
+                    dismissedPlayers: [],
+
+                    bowlerId: null,
+                    battingStats: {},
+                    bowlingStats: {},
+
+                    target: currentInnings.runs + 1
+                    };
+
+                    return {
+                    ...match,
+                    currentInnings: 2,
+                    innings: [...match.innings, secondInnings]
+                    };
+                });
+
+                return {
+                    ...state,
+                    matches
+                };
+                }
+                            
         
             default: return state
                
