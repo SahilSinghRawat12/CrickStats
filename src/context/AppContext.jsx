@@ -305,6 +305,30 @@ export default function AppContextProvider({children})
                     let newStrikerId = innings.strikerId;
                     let newNonStrikerId = innings.nonStrikerId;
 
+                    const noBatsmanLeft = innings.nextBatsmanIndex >= innings.battingOrder.length;
+
+                    // 🧠 LAST BATSMAN OUT → END INNINGS
+                    if (noBatsmanLeft) {
+
+                    const updatedInnings = {
+                        ...innings,
+                        wickets: innings.wickets + 1,
+                        dismissedPlayers: [
+                        ...innings.dismissedPlayers,
+                        outPlayerId
+                        ],
+                        isCompleted: true
+                    };
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = updatedInnings;
+
+                    return {
+                        ...match,
+                        innings: updatedInningsList
+                    };
+                    }
+
                     if(outPlayerId === newStrikerId)
                     {
                         newStrikerId = nextPlayerId;
