@@ -10,6 +10,7 @@ const LiveScore = () => {
   const navigate = useNavigate();
 
   const [showWicketMenu, setShowWicketMenu] = useState(false);
+  const [showNoBallMenu, setShowNoBallMenu] = useState(false);
 
   const currentMatch = state.matches.find( (match) => match.id === state.currentMatchId);
 
@@ -45,9 +46,9 @@ if (!currentMatch) {
   const tossLoserId = currentMatch.tossWinnerId === currentMatch.teamAId ? currentMatch.teamBId : currentMatch.teamAId;
 
 
-  const battingTeamId = currentMatch?.tossDecision === "Bat" ? currentMatch?.tossWinnerId : tossLoserId;
-  const bowlingTeamId = currentMatch?.tossDecision === "Bat" ? tossLoserId :currentMatch?.tossWinnerId;
-  
+  const battingTeamId = currentInnings?.battingTeamId;
+  const bowlingTeamId = currentInnings?.bowlingTeamId;
+
   const battingTeam = state.teams.find( t => t.id === battingTeamId);
   const bowlingTeam = state.teams.find( t => t.id === bowlingTeamId);
 
@@ -74,7 +75,7 @@ if (!currentMatch) {
           {teamB?.teamName}
         </h1>
         <p className="text-gray-600 mt-1">
-          Innings 1 of 2 · <span className="capitalize font-bold">Batting: </span> 
+          Innings {currentMatch.currentInnings} of 2 · <span className="capitalize font-bold">Batting: </span> 
             <span className="capitalize">{battingTeamName}</span> 
             · <span className="font-bold">Bowling: </span> 
             <span className="capitalize">{bowlingTeamName}</span> 
@@ -243,16 +244,71 @@ if (!currentMatch) {
      
       {/* Extras */}
       <div className="flex gap-3 mb-8">
-        {["Wide", "No-ball"].map((extra) => (
+      
           <button
-            key={extra}
             className="px-4 py-2 border rounded bg-white
                        hover:bg-gray-900 hover:text-white
                        transition-colors duration-200"
+
+            onClick={() => {
+
+              if (!currentInnings.bowlerId) {
+                toast.error("Select a bowler first");
+                return;
+              }
+
+              dispatch({
+                type: "ADD_WIDE" 
+              });
+
+            }}
           >
-            {extra}
+            Wide
           </button>
-        ))}
+
+          {/* no ball */}
+
+        <div >
+          <button
+            className="px-4 py-2 border rounded bg-white
+                       hover:bg-gray-900 hover:text-white
+                       transition-colors duration-200"
+
+           onClick={() => setShowNoBallMenu(prev => !prev)}
+          >
+            No Ball
+          </button>
+
+          {showNoBallMenu && (
+          <div className="absolute mt-2 bg-white border rounded shadow p-2 flex flex-col gap-2">
+
+            {[0,1,2,3,4,6].map(r => (
+              <button
+                key={r}
+                onClick={() => {
+
+                  if (!currentInnings.bowlerId) {
+                    toast.error("Select bowler first");
+                    return;
+                  }
+
+                  dispatch({
+                    type: "ADD_NO_BALL_RUN",
+                    payload: { runs: r }
+                  });
+
+                  setShowNoBallMenu(false);
+                }}
+                className="hover:bg-gray-100 px-3 py-1 rounded"
+              >
+                No ball + {r}
+              </button>
+            ))}
+
+          </div>
+        )}
+
+        </div>
 
          {/* wicket button */}
 
@@ -269,6 +325,11 @@ if (!currentMatch) {
 
           <button
             onClick={() => {
+              if (!currentInnings.bowlerId) {
+                  toast.error("Select a bowler first");
+                  return;
+                }
+
               dispatch({
                 type: "ADD_WICKET",
                 payload: { outPlayerId: currentInnings.strikerId }
@@ -282,6 +343,11 @@ if (!currentMatch) {
 
           <button
             onClick={() => {
+               if (!currentInnings.bowlerId) {
+                  toast.error("Select a bowler first");
+                  return;
+                }
+
               dispatch({
                 type: "ADD_WICKET",
                 payload: { outPlayerId: currentInnings.nonStrikerId }
@@ -307,6 +373,8 @@ if (!currentMatch) {
         <button
           className="px-6 py-2 bg-blue-600 text-white rounded-md
                      hover:bg-blue-700 transition-colors duration-200"
+
+           onClick={() => dispatch({ type: "END_INNINGS" })}
         >
           End Innings
         </button>
@@ -314,8 +382,6 @@ if (!currentMatch) {
         <button
           className="px-6 py-2 bg-red-600 text-white rounded-md
                      hover:bg-red-700 transition-colors duration-200"
-
-           onClick={() => dispatch({ type: "END_INNINGS" })}
         >
           Finish Match
         </button>

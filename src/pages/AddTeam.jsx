@@ -54,7 +54,7 @@ const AddTeam = () => {
               <div className='flex gap-5'>
                 <label>Team Name</label>
                  <input 
-                 placeholder='Enter Player Name'
+                 placeholder='Enter Team Name'
                  name='teamName'
                  value={teamName}
                  onChange={(e)=> setTeamName(e.target.value)}                

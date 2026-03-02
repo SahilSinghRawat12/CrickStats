@@ -141,10 +141,12 @@ export default function AppContextProvider({children})
             }
 
             case "ADD_RUN": {
-
+                
             const { runs } = action.payload;
 
             const matches = state.matches.map(match => {
+
+                // if (!innings.strikerId) return match;
 
                 // 1. Update only the active match
                 if (match.id !== state.currentMatchId) return match;
@@ -153,11 +155,26 @@ export default function AppContextProvider({children})
                 const inningsIndex = match.currentInnings - 1;
                 const innings = match.innings[inningsIndex];
 
-                
+                // STOP if innings already completed
+                    if (innings.isCompleted) {
+                        return match;
+                    }
+
+                // stop if over finished
+                const maxBalls = match.overs * 6;
+
+                if (innings.balls >= maxBalls) {
+                    return match; // stop scoring after match overs finished
+                }
+      
                 // ❗ Stop scoring if no bowler selected
                 if (!innings.bowlerId) return match;
 
                 const strikerId = innings.strikerId;
+
+                if (innings.dismissedPlayers.includes(strikerId)) {
+                        return match;
+                    }
 
                 // ---- BATSMAN STATS ----
                 const strikerStats = innings.battingStats[strikerId] || {
@@ -222,9 +239,9 @@ export default function AppContextProvider({children})
                 const ballsInOver = newBallForOver % 6;
                 const oversCompleted = Math.floor(newBallForOver / 6);
 
-                if (oversCompleted >= match.overs) {
-                    return match;
-                }
+                // if (oversCompleted >= match.overs) {
+                //     return match;
+                // }
 
                 let newStrikerId = innings.strikerId;
                 let newNonStrikerId = innings.nonStrikerId;
@@ -233,27 +250,35 @@ export default function AppContextProvider({children})
                 let newBowlerId = innings.bowlerId;
 
                 // if over completed → force selecting new bowler
-                if(runs === 1 || runs === 3)
-                {
-                    newStrikerId = innings.nonStrikerId;
-                    newNonStrikerId = innings.strikerId;
-                }
-
-                if (ballsInOver === 0) {
-                    //swap strike at the end of over
+                // change strike only if 2 different players exist
+                    if (
+                    (runs === 1 || runs === 3) &&
+                    newStrikerId !== newNonStrikerId
+                    ) {
                     const temp = newStrikerId;
                     newStrikerId = newNonStrikerId;
                     newNonStrikerId = temp;
+                    }
 
-                    //force new bowler selection
-                     newBowlerId = null;
-                }
+               // END OF OVER STRIKE CHANGE
+                    if (ballsInOver === 0) {
 
-                if(newBallForOver % 6 === 0)
-                {
-                    newStrikerId = innings.nonStrikerId;
-                    newNonStrikerId = innings.strikerId;
-                }
+                        // swap only if two different batsmen exist
+                        if (newStrikerId !== newNonStrikerId) {
+                            const temp = newStrikerId;
+                            newStrikerId = newNonStrikerId;
+                            newNonStrikerId = temp;
+                        }
+
+                        // force selecting new bowler for next over
+                        newBowlerId = null;
+                    }
+
+                // if(newBallForOver % 6 === 0)
+                // {
+                //     newStrikerId = innings.nonStrikerId;
+                //     newNonStrikerId = innings.strikerId;
+                // }
 
 
                 // ---- UPDATE INNINGS ----
@@ -300,12 +325,16 @@ export default function AppContextProvider({children})
                     const inningsIndex = match.currentInnings - 1;
                     const innings = match.innings[inningsIndex];
 
-                    const nextPlayerId = innings.battingOrder[innings.nextBatsmanIndex];
+                    const nextPlayerId = innings.battingOrder[innings.nextBatsmanIndex] || null;
 
                     let newStrikerId = innings.strikerId;
                     let newNonStrikerId = innings.nonStrikerId;
 
-                    const noBatsmanLeft = innings.nextBatsmanIndex >= innings.battingOrder.length;
+                    const totalPlayers = innings.battingOrder.length;
+                    const wicketsAfterThisBall = innings.wickets + 1;
+
+                    const noBatsmanLeft =
+                    wicketsAfterThisBall >= totalPlayers - 1;
 
                     // 🧠 LAST BATSMAN OUT → END INNINGS
                     if (noBatsmanLeft) {
@@ -329,11 +358,29 @@ export default function AppContextProvider({children})
                     };
                     }
 
-                    if(outPlayerId === newStrikerId)
-                    {
+                  // ⭐ STRIKER OUT
+                    if (outPlayerId === innings.strikerId) {
+
+                    if (nextPlayerId) {
+                        // normal case
                         newStrikerId = nextPlayerId;
                     } else {
+                        // no batsman left → non striker plays alone
+                        newStrikerId = innings.nonStrikerId;
+                        newNonStrikerId = innings.nonStrikerId;
+                    }
+
+                    }
+                    // ⭐ NON STRIKER OUT
+                    else {
+
+                    if (nextPlayerId) {
                         newNonStrikerId = nextPlayerId;
+                    } else {
+                        // striker plays alone
+                        newNonStrikerId = innings.strikerId;
+                    }
+
                     }
 
 
@@ -469,12 +516,13 @@ export default function AppContextProvider({children})
                     battingStats: {},
                     bowlingStats: {},
 
-                    target: currentInnings.runs + 1
+                    // target: currentInnings.runs + 1
                     };
 
                     return {
                     ...match,
-                    currentInnings: 2,
+                    currentInnings: match.currentInnings + 1,
+                    target: currentInnings.runs + 1,
                     innings: [...match.innings, secondInnings]
                     };
                 });
@@ -484,10 +532,163 @@ export default function AppContextProvider({children})
                     matches
                 };
                 }
+
+
+                case "ADD_WIDE": {
+
+                const matches = state.matches.map(match => {
+
+                    if (match.id !== state.currentMatchId) return match;
+
+                    const inningsIndex = match.currentInnings - 1;
+                    const innings = match.innings[inningsIndex];
+
+                    // stop if innings completed
+                    if (innings.isCompleted) return match;
+
+                    // must select bowler
+                    if (!innings.bowlerId) return match;
+
+                    const bowlerId = innings.bowlerId;
+
+                    const bowlerStats = innings.bowlingStats[bowlerId] || {
+                    runs: 0,
+                    balls: 0,
+                    wickets: 0,
+                    er: 0
+                    };
+
+                    const updatedBowlerStats = {
+                    ...bowlerStats,
+                    runs: bowlerStats.runs + 1,
+                    er:
+                        bowlerStats.balls > 0
+                        ? ((bowlerStats.runs + 1) / (bowlerStats.balls / 6)).toFixed(2)
+                        : 0
+                    };
+
+                    const updatedInnings = {
+                    ...innings,
+                    runs: innings.runs + 1,
+                    bowlingStats: {
+                        ...innings.bowlingStats,
+                        [bowlerId]: updatedBowlerStats
+                    }
+                    };
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = updatedInnings;
+
+                    return { ...match, innings: updatedInningsList };
+                });
+
+                return { ...state, matches };
+                }
+
+
+                case "ADD_NO_BALL_RUN": {
+
+                const { runs } = action.payload;
+
+                const matches = state.matches.map(match => {
+
+                    if (match.id !== state.currentMatchId) return match;
+
+                    const inningsIndex = match.currentInnings - 1;
+                    const innings = match.innings[inningsIndex];
+
+                    // stop if innings completed
+                    if (innings.isCompleted) return match;
+
+                    // stop if striker already out
+                    if (innings.dismissedPlayers.includes(innings.strikerId)) {
+                        return match;
+}
+
+                    if (!innings.bowlerId) return match;
+
+                    const strikerId = innings.strikerId;
+                    const bowlerId = innings.bowlerId;
+
+                    // ---------- BATSMAN ----------
+                    const strikerStats = innings.battingStats[strikerId] || {
+                    runs: 0,
+                    balls: 0,
+                    fours: 0,
+                    sixes: 0,
+                    sr: 0
+                    };
+
+                    const newRuns = strikerStats.runs + runs;
+
+                    const updatedStrikerStats = {
+                    ...strikerStats,
+                    runs: newRuns,
+                    fours: runs === 4 ? strikerStats.fours + 1 : strikerStats.fours,
+                    sixes: runs === 6 ? strikerStats.sixes + 1 : strikerStats.sixes,
+                    sr: strikerStats.balls > 0
+                        ? ((newRuns / strikerStats.balls) * 100).toFixed(2)
+                        : 0
+                    };
+
+                    // ---------- BOWLER ----------
+                    const bowlerStats = innings.bowlingStats[bowlerId] || {
+                    runs: 0,
+                    balls: 0,
+                    wickets: 0,
+                    er: 0
+                    };
+
+                    const totalRuns = runs + 1; // no ball extra
+
+                    const updatedBowlerStats = {
+                    ...bowlerStats,
+                    runs: bowlerStats.runs + totalRuns,
+                    er:
+                        bowlerStats.balls > 0
+                        ? ((bowlerStats.runs + totalRuns) / (bowlerStats.balls / 6)).toFixed(2)
+                        : 0
+                    };
+
+                    // ---------- STRIKE CHANGE ----------
+                    let newStriker = innings.strikerId;
+                    let newNonStriker = innings.nonStrikerId;
+
+                    if (runs === 1 || runs === 3) {
+                    newStriker = innings.nonStrikerId;
+                    newNonStriker = innings.strikerId;
+                    }
+
+                    const updatedInnings = {
+                    ...innings,
+                    runs: innings.runs + totalRuns,
+                    strikerId: newStriker,
+                    nonStrikerId: newNonStriker,
+                    battingStats: {
+                        ...innings.battingStats,
+                        [strikerId]: updatedStrikerStats
+                    },
+                    bowlingStats: {
+                        ...innings.bowlingStats,
+                        [bowlerId]: updatedBowlerStats
+                    }
+                    };
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = updatedInnings;
+
+                    return {
+                    ...match,
+                    innings: updatedInningsList
+                    };
+                });
+
+                return { ...state, matches };
+                }
                             
         
             default: return state
-               
+                
         }
     }
 
