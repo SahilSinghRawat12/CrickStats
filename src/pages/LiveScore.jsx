@@ -67,6 +67,16 @@ if (!currentMatch) {
                       <MdArrowBackIosNew/>
                     </div>
 
+       {/* ⭐ WINNER BANNER */}
+    {currentMatch.isFinished && (
+      <div className="bg-green-600 text-white p-4 rounded mb-4 text-center font-bold">
+        {
+          state.teams.find(t => t.id === currentMatch.winnerTeamId)?.teamName
+        } won the match 🎉
+      </div>
+    )}
+
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold capitalize">
@@ -86,7 +96,10 @@ if (!currentMatch) {
       {/* Score Summary */}
       <div className="bg-white border rounded-lg p-4 mb-8">
         <h2 className="text-xl font-semibold capitalize">{battingTeam?.teamName} - {currentInnings?.runs ?? 0}/{currentInnings.wickets ?? 0} ({overDisplay})</h2>
-        <p className="text-gray-500 mt-1">Target: —</p>
+        {
+          currentMatch.currentInnings === 2 && 
+          (<p className="text-gray-500 mt-1">Target: {currentMatch.target}</p>)
+          }
       </div>
 
       {/* Batting + Bowling */}
@@ -219,7 +232,19 @@ if (!currentMatch) {
             <button
               key={run}
               onClick={ () => {
-                
+
+                  if (currentMatch.isFinished) {
+                    toast.error("Match Finished");
+                    return;
+                  }
+
+                 const maxBalls = currentMatch.overs * 6;
+
+                  if (currentInnings.balls >= maxBalls) {
+                    toast.error("Overs Completed");
+                    return;
+                  }
+                  
                   if (!currentInnings.bowlerId) {
                   toast.error("Select a bowler first");
                   return;
@@ -251,6 +276,18 @@ if (!currentMatch) {
                        transition-colors duration-200"
 
             onClick={() => {
+
+               if (currentMatch.isFinished) {
+                    toast.error("Match Finished");
+                    return;
+                  }
+
+               const maxBalls = currentMatch.overs * 6;
+
+                  if (currentInnings.balls >= maxBalls) {
+                    toast.error("Overs Completed");
+                    return;
+                  }
 
               if (!currentInnings.bowlerId) {
                 toast.error("Select a bowler first");
@@ -286,6 +323,18 @@ if (!currentMatch) {
               <button
                 key={r}
                 onClick={() => {
+
+                   if (currentMatch.isFinished) {
+                    toast.error("Match Finished");
+                    return;
+                  }
+
+                   const maxBalls = currentMatch.overs * 6;
+
+                  if (currentInnings.balls >= maxBalls) {
+                    toast.error("Overs Completed");
+                    return;
+                  }
 
                   if (!currentInnings.bowlerId) {
                     toast.error("Select bowler first");
@@ -324,11 +373,34 @@ if (!currentMatch) {
         <div className="absolute mt-2 bg-white border rounded shadow p-2 flex flex-col gap-2">
 
           <button
-            onClick={() => {
+            onClick={() => {   
+              
+               if (currentMatch.isFinished) {
+                    toast.error("Match Finished");
+                    return;
+                  }
+
+              const maxBalls = currentMatch.overs * 6;
+
+              if (currentInnings.balls >= maxBalls) {
+                toast.error("Overs Completed");
+                return;
+              }
+
+              if (currentInnings.isCompleted) {
+                toast.error("Innings Completed");
+                return;
+              }
+
+              if (!currentInnings.strikerId) {
+                toast.error("No striker available");
+                return;
+              }
+
               if (!currentInnings.bowlerId) {
-                  toast.error("Select a bowler first");
-                  return;
-                }
+                toast.error("Select a bowler first");
+                return;
+              }
 
               dispatch({
                 type: "ADD_WICKET",
@@ -343,10 +415,34 @@ if (!currentMatch) {
 
           <button
             onClick={() => {
-               if (!currentInnings.bowlerId) {
-                  toast.error("Select a bowler first");
-                  return;
-                }
+
+               if (currentMatch.isFinished) {
+                    toast.error("Match Finished");
+                    return;
+                  }
+                  
+                  const maxBalls = currentMatch.overs * 6;
+
+              if (currentInnings.balls >= maxBalls) {
+                toast.error("Overs Completed");
+                return;
+              }
+
+              if (currentInnings.isCompleted) {
+                toast.error("Innings Completed");
+                return;
+              }
+
+              if (!currentInnings.strikerId) {
+                toast.error("No striker available");
+                return;
+              }
+
+              if (!currentInnings.bowlerId) {
+                toast.error("Select a bowler first");
+                return;
+              }
+
 
               dispatch({
                 type: "ADD_WICKET",

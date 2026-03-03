@@ -296,6 +296,26 @@ export default function AppContextProvider({children})
                  bowlingStats: updatedBowlingStats
                 };
 
+                // ⭐ TARGET CHASE LOGIC
+                    if (
+                    match.currentInnings === 2 &&
+                    updatedInnings.runs >= match.target
+                    ) {
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = {
+                        ...updatedInnings,
+                        isCompleted: true
+                    };
+
+                    return {
+                        ...match,
+                        innings: updatedInningsList,
+                        isFinished: true,
+                        winnerTeamId: innings.battingTeamId
+                    };
+                    }
+
                 // 4. Put updated innings back into innings array
                 const updatedInningsList = [...match.innings];
                 updatedInningsList[inningsIndex] = updatedInnings;
@@ -320,10 +340,18 @@ export default function AppContextProvider({children})
                 const {outPlayerId} = action.payload;
 
                 const matches = state.matches.map(match => {
+
+                    // if (innings.isCompleted) return match;
+
+                    // const maxBalls = match.overs * 6;
+                    // if (innings.balls >= maxBalls) return match;
+
                     if(match.id !== state.currentMatchId) return match;
 
                     const inningsIndex = match.currentInnings - 1;
                     const innings = match.innings[inningsIndex];
+
+                    if (!innings.bowlerId) return match;
 
                     const nextPlayerId = innings.battingOrder[innings.nextBatsmanIndex] || null;
 
@@ -546,6 +574,12 @@ export default function AppContextProvider({children})
                     // stop if innings completed
                     if (innings.isCompleted) return match;
 
+                    const maxBalls = match.overs * 6;
+
+                    if (innings.balls >= maxBalls) {
+                        return match;
+                    }
+
                     // must select bowler
                     if (!innings.bowlerId) return match;
 
@@ -576,6 +610,27 @@ export default function AppContextProvider({children})
                     }
                     };
 
+                    // ⭐ TARGET CHASE LOGIC
+                    if (
+                    match.currentInnings === 2 &&
+                    updatedInnings.runs >= match.target
+                    ) {
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = {
+                        ...updatedInnings,
+                        isCompleted: true
+                    };
+
+                    return {
+                        ...match,
+                        innings: updatedInningsList,
+                        isFinished: true,
+                        winnerTeamId: innings.battingTeamId
+                    };
+                    }
+
+
                     const updatedInningsList = [...match.innings];
                     updatedInningsList[inningsIndex] = updatedInnings;
 
@@ -600,10 +655,16 @@ export default function AppContextProvider({children})
                     // stop if innings completed
                     if (innings.isCompleted) return match;
 
+                    const maxBalls = match.overs * 6;
+
+                        if (innings.balls >= maxBalls) {
+                            return match;
+                        }
+
                     // stop if striker already out
                     if (innings.dismissedPlayers.includes(innings.strikerId)) {
                         return match;
-}
+                        }
 
                     if (!innings.bowlerId) return match;
 
@@ -654,7 +715,10 @@ export default function AppContextProvider({children})
                     let newStriker = innings.strikerId;
                     let newNonStriker = innings.nonStrikerId;
 
-                    if (runs === 1 || runs === 3) {
+                   if (
+                    (runs === 1 || runs === 3) &&
+                    newStriker !== newNonStriker
+                    ) {
                     newStriker = innings.nonStrikerId;
                     newNonStriker = innings.strikerId;
                     }
@@ -673,6 +737,27 @@ export default function AppContextProvider({children})
                         [bowlerId]: updatedBowlerStats
                     }
                     };
+
+                    // ⭐ TARGET CHASE LOGIC
+                    if (
+                    match.currentInnings === 2 &&
+                    updatedInnings.runs >= match.target
+                    ) {
+
+                    const updatedInningsList = [...match.innings];
+                    updatedInningsList[inningsIndex] = {
+                        ...updatedInnings,
+                        isCompleted: true
+                    };
+
+                    return {
+                        ...match,
+                        innings: updatedInningsList,
+                        isFinished: true,
+                        winnerTeamId: innings.battingTeamId
+                    };
+                    }
+
 
                     const updatedInningsList = [...match.innings];
                     updatedInningsList[inningsIndex] = updatedInnings;
