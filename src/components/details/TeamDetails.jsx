@@ -50,7 +50,7 @@ const TeamDetails = () => {
                             <span></span>
                           </div>
 
-
+                          
                           {teamPlayers.map((player) => (
                                 <div
                                   key={player.id}

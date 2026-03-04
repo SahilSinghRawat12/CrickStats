@@ -296,11 +296,16 @@ export default function AppContextProvider({children})
                  bowlingStats: updatedBowlingStats
                 };
 
-                // ⭐ TARGET CHASE LOGIC
+               // TARGET CHASE
                     if (
                     match.currentInnings === 2 &&
                     updatedInnings.runs >= match.target
                     ) {
+
+                    const totalPlayers = updatedInnings.battingOrder.length;
+                    const wicketsLost = updatedInnings.wickets;
+
+                    const wicketsRemaining = totalPlayers - wicketsLost - 1;
 
                     const updatedInningsList = [...match.innings];
                     updatedInningsList[inningsIndex] = {
@@ -312,7 +317,8 @@ export default function AppContextProvider({children})
                         ...match,
                         innings: updatedInningsList,
                         isFinished: true,
-                        winnerTeamId: innings.battingTeamId
+                        winnerTeamId: updatedInnings.battingTeamId,
+                        resultText: `Won by ${wicketsRemaining} wickets`
                     };
                     }
 
@@ -504,10 +510,21 @@ export default function AppContextProvider({children})
                     const currentInnings = match.innings[inningsIndex];
 
                     // if already 2 innings → finish match
-                    if (match.currentInnings === 2) {
+                   if (match.currentInnings === 2) {
+
+                    const firstInnings = match.innings[0];
+                    const secondInnings = currentInnings;
+
+                    const firstRuns = firstInnings.runs;
+                    const secondRuns = secondInnings.runs;
+
+                    const runsDifference = firstRuns - secondRuns;
+
                     return {
                         ...match,
-                        isFinished: true
+                        isFinished: true,
+                        winnerTeamId: firstInnings.battingTeamId,
+                        resultText: `Won by ${runsDifference} runs`
                     };
                     }
 

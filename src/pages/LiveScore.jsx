@@ -33,6 +33,19 @@ if (!currentMatch) {
   const currentInnings = currentMatch.innings?.[currentMatch.currentInnings - 1];
 
   const totalBalls = currentInnings?.balls ?? 0;
+
+    const ballsRemaining =
+    (currentMatch.overs * 6) - currentInnings.balls;
+
+  const runsNeeded =
+    currentMatch.target
+      ? currentMatch.target - currentInnings.runs
+      : 0;
+
+  const requiredRunRate =
+    ballsRemaining > 0
+      ? ((runsNeeded / ballsRemaining) * 6).toFixed(2)
+      : 0;
    
   // const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
   const oversCompleted = Math.floor(currentInnings.balls / 6);
@@ -69,11 +82,14 @@ if (!currentMatch) {
 
        {/* ⭐ WINNER BANNER */}
     {currentMatch.isFinished && (
-      <div className="bg-green-600 text-white p-4 rounded mb-4 text-center font-bold">
-        {
-          state.teams.find(t => t.id === currentMatch.winnerTeamId)?.teamName
-        } won the match 🎉
-      </div>
+  <div className="bg-green-600 text-white p-4 rounded mb-4 text-center font-bold">
+
+    {state.teams.find(t => t.id === currentMatch.winnerTeamId)?.teamName}
+
+    {" "}
+    {currentMatch.resultText}
+
+  </div>
     )}
 
 
@@ -223,6 +239,24 @@ if (!currentMatch) {
               }
         </div>
       </div>
+
+      {/* runs needed and required run rate */}
+
+            {currentMatch.currentInnings === 2 && !currentMatch.isFinished && (
+
+        <div className="mt-2 mb-5 text-gray-700">
+
+          <p>
+            Need {runsNeeded} runs from {ballsRemaining} balls
+          </p>
+
+          <p>
+            Required Run Rate: {requiredRunRate}
+          </p>
+
+        </div>
+
+      )}
 
       {/* Run Buttons */}
       <div className="mb-8">
@@ -478,6 +512,16 @@ if (!currentMatch) {
         <button
           className="px-6 py-2 bg-red-600 text-white rounded-md
                      hover:bg-red-700 transition-colors duration-200"
+
+           onClick={() => {
+            if (!currentMatch.isFinished) {
+              toast.error("Match not finished yet");
+              return;
+            }
+
+            navigate("/match-summary");
+
+          }}
         >
           Finish Match
         </button>
