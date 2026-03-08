@@ -170,8 +170,8 @@ const DashContent = () => {
                 className="bg-white border-2  shadow rounded-lg p-5 flex justify-between"
               >
 
-                <p className="font-semibold">
-                  {team.teamName}
+                <p className="font-semibold capitalize">
+                  {team.team_name}
                 </p>
 
                 <p className="text-gray-500">

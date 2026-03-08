@@ -1,11 +1,11 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { CiSquarePlus } from "react-icons/ci";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { NavLink, useNavigate } from 'react-router-dom';
 import defaultImage from "../../assests/image.png"
 import { teamsNames } from '../../data/data.js';
 import { AppContext } from '../../context/AppContext.jsx';
-
+import { supabase } from '../../lib/supabaseCleint.js';
 
 
 const TeamContent = () => {
@@ -13,6 +13,47 @@ const TeamContent = () => {
   const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
 
+  const fetchTeams = async ()=>{
+
+    const {data , error} = await supabase
+        .from("teams")
+        .select("*");
+
+        if(error)
+        {
+          console.log(error);
+          return;
+        }
+
+        dispatch({
+          type:"SET_TEAMS",
+          payload: data
+        });
+  };
+
+  const deleteTeam = async (teamId) => {
+      const {error} = await supabase
+      .from("teams")
+      .delete()
+      .eq("id" , teamId);
+
+      if(error)
+      {
+        console.log(error);
+        return;        
+      }
+
+      dispatch(
+        {
+          type: "DELETE_TEAM",
+          payload: teamId
+        }
+      );
+  };
+
+  useEffect(()=>{
+    fetchTeams();
+  }, [])
  
   return (
     <div className='w-full pl-16 '>
@@ -39,21 +80,27 @@ const TeamContent = () => {
 
               return(
                  
-            <div key={team.id} className='flex justify-between cursor-pointer bg-white border border-b-gray-300 shadow-sm rounded-md items-center px-5 py-2'
-             onClick={()=> {
-              dispatch({type:'SET_CURRENT_TEAM' , payload:team.id})
-              navigate('/teams/teamdetails')}}>
+            <div key={team.id} className='flex justify-between cursor-pointer bg-white border border-b-gray-300 shadow-sm rounded-md items-center px-5 py-2'>
              
              <div className='flex gap-5' >
                     <img src={defaultImage} alt='logo' className='w-10 h-10 rounded-full'/>
                 <div>
-                   <h2 className='text-md font-semibold'>{team.teamName}</h2>
+                   <h2 className='text-md font-semibold capitalize'>{team.team_name}</h2>
                    <span className='text-sm text-gray-800'>{totalPlayers} Players</span>
                 </div>
+
+                <button
+                onClick={() => deleteTeam(team.id)}
+                className="bg-red-500 text-white px-3 py-1 h-8 mt-1 rounded ml-14"
+              >
+                Delete
+              </button>
              </div>
 
-                <div>
-                    <MdOutlineKeyboardArrowRight/>
+                <div onClick={()=> {
+              dispatch({type:'SET_CURRENT_TEAM' , payload:team.id})
+              navigate(`/teams/${team.id}`)}}>
+                    <MdOutlineKeyboardArrowRight size={30 }/>
                 </div>
             </div>
               )   

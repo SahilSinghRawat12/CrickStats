@@ -4,6 +4,10 @@ import { category } from '../data/data'
 import { MdArrowBackIosNew } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
+import { supabase } from '../lib/supabaseCleint'
+import toast from 'react-hot-toast'
+
+
 
 const AddTeam = () => {
 
@@ -12,19 +16,31 @@ const AddTeam = () => {
 //  const [value , setValue] = useState(1);
  const navigate = useNavigate();
  
- function submitHandler(e)
+ async function submitHandler(e)
  {
     e.preventDefault();
+
+    const {data , error} = await supabase
+          .from("teams")
+          .insert([{ team_name: teamName}])
+          .select()
+          .single();
+          
+          if(error)
+          {
+            console.log(error);
+            return;
+          }
 
     dispatch(
       {
         type: 'ADD_TEAM',
-        payload: {
-          teamName: teamName,
+        payload:data
           // totalPlayers: value
-        }
       }
     );
+
+    toast.success("Team Created");
 
     setTeamName("");
     // setValue(1);

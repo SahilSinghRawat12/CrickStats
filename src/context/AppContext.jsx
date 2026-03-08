@@ -22,22 +22,25 @@ export default function AppContextProvider({children})
 
             case "ADD_TEAM":
             
-              const newTeam = {
-                     id: Date.now(), 
-                    teamName: action.payload.teamName
-                    // totalPlayers: action.payload.totalPlayers
-                };
-                
-            
             return {
-
               ...state,               
                 teams: [
                     ...state.teams,
-                     newTeam,
+                    action.payload
                 ],
-                currentTeamId: newTeam.id  //set current team
+                currentTeamId: action.payload.id  //set current team
             };
+
+            case "SET_TEAMS": return {
+                ...state,
+                teams: action.payload
+            }
+
+            case "DELETE_TEAM" : 
+            return {
+                ...state,
+                teams: state.teams.filter( team => team.id !== action.payload)
+            }
 
             case "SET_CURRENT_TEAM": return {
                 ...state,
@@ -48,17 +51,17 @@ export default function AppContextProvider({children})
                 
                 ...state,
 
-                players: [
-                    ...state.players, 
-                    {
-                         id: Date.now(),
-                         playerName: action.payload.playerName,
-                         playerRole: action.payload.playerRole,
-                         isCaptain: action.payload.isCaptain,
-                         teamId: state.currentTeamId
-                    }
-                ]
+                players: [ ...state.players, action.payload ]
             };
+
+            //fetcing player from database
+            case "SET_PLAYERS":
+
+                    return {
+                    ...state,
+                    players: action.payload
+                    
+              };
 
             case "REMOVE_PLAYER" : return {
                 ...state,

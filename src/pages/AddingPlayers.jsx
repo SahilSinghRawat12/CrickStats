@@ -1,15 +1,18 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import defaultImage from "../assests/image.png"
 import { category } from '../data/data'
 import { MdArrowBackIosNew } from "react-icons/md";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { supabase } from '../lib/supabaseCleint';
+import toast from 'react-hot-toast';
 
 
 const AddingPlayers = () => {
 
    const {state , dispatch} = useContext(AppContext);
 
+    const {teamId} = useParams();
     const [isActiveIndex , setIsActiveIndex] = useState(null);
     const [name , setName] = useState("");
     const [role , setRole] = useState("");
@@ -18,7 +21,7 @@ const AddingPlayers = () => {
     const navigate = useNavigate();
 
 
-    function submitHandler(event)
+    async function submitHandler(event)
     {
       event.preventDefault();
 
@@ -26,22 +29,62 @@ const AddingPlayers = () => {
         if (!role) {
           alert("Please select a player role");
           return;
+        }        
+
+        const {data , error} = await supabase
+        .from("players")
+        .insert([
+          {
+            player_name: name,
+            player_role: role,
+            is_captain: captain,
+            team_id: teamId
+          }
+        ])
+        .select()   // selects the inserted row
+        .single();  // selects only the object from the array
+
+        if(error)
+        {
+          console.log(error);
+          return;
         }
 
        dispatch({
          type:'ADD_PLAYER',
-         payload: {
-            playerName: name,
-            playerRole: role,
-            isCaptain: captain
-         }
+         payload: data
        });
+
+       toast.success("Player Added");
 
        setName("");
        setRole("");
        setCaptain(false);
        setIsActiveIndex(null);
     }
+
+    const fetchPlayers = async () => {
+      const {data , error} = await supabase
+      .from("players")
+      .select("*")
+      .eq("team_id" , teamId);
+
+      if(error)
+      {
+        console.log(error);
+        return;
+      }
+      
+      dispatch({
+        type: "SET_PLAYERS",
+        payload: data
+      });
+
+    };
+
+    useEffect(()=>{
+      fetchPlayers();
+    } , [teamId]);
 
   return (
     <div className='h-screen w-full'>

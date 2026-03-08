@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Sidebar from '../components/headers/Sidebar'
 import DashContent from '../components/content/DashContent'
 import TopPlayers from '../components/content/TopPlayers'
+ 
 
 const Dashboard = () => {
-  
+
   const [isOpen , setIsOpen] = useState(true);
   return (
     <div className='flex h-full'>
@@ -17,8 +18,6 @@ const Dashboard = () => {
         {/* <TopPlayers /> */}
       </div>
 
-        
-      
     </div>
   )
 }

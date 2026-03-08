@@ -29,8 +29,8 @@ function App() {
            <Route path='/dashboard' element={<Dashboard/>} />
            <Route path='/teams' element={<Teams/>} />
            <Route path='/teams/addteam' element={<AddTeam/>} />
-           <Route path='/teams/teamdetails' element={<TeamDetailsPage/>} />
-           <Route path='/teams/teamdetails/add_player' element={<AddingPlayers/>} />
+           <Route path='/teams/:teamId' element={<TeamDetailsPage/>} />
+           <Route path='/teams/:teamId/add_player' element={<AddingPlayers/>} />
            <Route path='/matches' element={<Matches/>} />
            <Route path='/matches/create_match' element={<AddMatch/>} />
            <Route path='/matches/details' element={<ScoreCard/>} />
