@@ -6,6 +6,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { MdArrowBackIosNew } from 'react-icons/md';
 import { AppContext } from '../../context/AppContext';
 import { useParams } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseCleint';
 
  
 
@@ -18,12 +19,31 @@ const TeamDetails = () => {
   const navigate = useNavigate();
 
   const currentTeam = state.teams.find(
-    (team) => team.id === teamId
+    (team) => team.id == teamId
   );
 
   const teamPlayers = state.players.filter(
-    player => player.team_id === state.currentTeamId
+    player => player.team_id === teamId
   );
+
+
+const fetchPlayers = async () => {
+  const {data , error} = await supabase
+    .from("players")
+    .select("*")
+    .eq("team_id" , teamId);
+
+    if(error)
+    {
+      console.log(error);
+      return;
+    }
+
+    dispatch({
+      type: "SET_PLAYERS",
+      payload: data
+    });
+};
 
   useEffect(() => {
 
@@ -31,8 +51,11 @@ const TeamDetails = () => {
     type: "SET_CURRENT_TEAM",
     payload: teamId
   });
+  
+fetchPlayers();
 
 }, [teamId]);
+
   
   return (
     <div className='w-full relative pl-16'>

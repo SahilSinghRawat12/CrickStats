@@ -75,7 +75,7 @@ const TeamContent = () => {
             state.teams.map( (team)=> {
 
               const totalPlayers = state.players.filter(
-                player => player.teamId === team.id
+                player => player.team_id == team.id
               ).length;
 
               return(
