@@ -17,7 +17,11 @@ const TeamContent = () => {
 
     const {data , error} = await supabase
         .from("teams")
-        .select("*");
+        .select(`
+          id,
+          team_name,
+          players(count)
+         `);
 
         if(error)
         {
@@ -30,6 +34,23 @@ const TeamContent = () => {
           payload: data
         });
   };
+
+  // const fetchPlayers = async () => {
+  //   const {data , error} = await supabase
+  //   .from("players")
+  //   .select("*")
+
+  //   if(error)
+  //   {
+  //     console.log(error);
+  //     return;
+  //   }
+
+  //   dispatch({
+  //     type: "SET_PLAYERS",
+  //     payload: data
+  //   })
+  // }
 
   const deleteTeam = async (teamId) => {
       const {error} = await supabase
@@ -53,6 +74,7 @@ const TeamContent = () => {
 
   useEffect(()=>{
     fetchTeams();
+    // fetchPlayers();
   }, [])
  
   return (
@@ -74,9 +96,11 @@ const TeamContent = () => {
           {
             state.teams.map( (team)=> {
 
-              const totalPlayers = state.players.filter(
-                player => player.team_id == team.id
-              ).length;
+              // const totalPlayers = state.players.filter(
+              //   player => player.team_id == team.id
+              // ).length;
+              
+              const totalPlayers = team.players?.[0].count || 0;
 
               return(
                  

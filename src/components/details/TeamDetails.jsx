@@ -23,7 +23,7 @@ const TeamDetails = () => {
   );
 
   const teamPlayers = state.players.filter(
-    player => player.team_id === teamId
+    player => player.team_id == teamId
   );
 
 
@@ -45,6 +45,46 @@ const fetchPlayers = async () => {
     });
 };
 
+
+const fetchTeams = async () => {
+
+  const { data, error } = await supabase
+    .from("teams")
+    .select("*");
+
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  dispatch({
+    type: "SET_TEAMS",
+    payload: data
+  });
+
+};
+
+
+const deletePlayer = async (playerId) => {
+   const {error} = await supabase
+   .from("players")
+   .delete()
+   .eq("id" , playerId);
+
+   if(error)
+    {
+      console.log(error);
+      return;
+    }
+
+    dispatch({
+      type:"REMOVE_PLAYER",
+      payload: playerId
+    });
+};
+
+
+
   useEffect(() => {
 
   dispatch({
@@ -52,6 +92,7 @@ const fetchPlayers = async () => {
     payload: teamId
   });
   
+fetchTeams();
 fetchPlayers();
 
 }, [teamId]);
@@ -105,12 +146,7 @@ fetchPlayers();
                                   </span>
 
                                   {/* Remove */}
-                                  <span onClick={() => {
-                                    dispatch({
-                                      type: 'REMOVE_PLAYER',
-                                      payload: player.id
-                                      });
-                                  }}>
+                                  <span onClick={() => deletePlayer(player.id)}>
                                   <IoIosRemoveCircleOutline  size={18} className="cursor-pointer mx-auto" />
                                   </span>
                                 
