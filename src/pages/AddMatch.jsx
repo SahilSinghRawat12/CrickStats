@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { teamsNames } from '../data/data'
 import { AppContext } from '../context/AppContext'
 import toast from 'react-hot-toast'
+import { supabase } from "../lib/supabaseCleint"
 
 
 const AddMatch = () => {
@@ -24,12 +25,12 @@ const AddMatch = () => {
 
  })
  
- function submitHandler(e)
+ async function submitHandler(e)
  {
     e.preventDefault();
 
     if(state.players.filter(
-        player => player.teamId === teamA
+        player => player.team_id == teamA
     ).length < 1)
     {
         toast.error("There should be atleast 1 or more players on teamA")
@@ -37,7 +38,7 @@ const AddMatch = () => {
     }
 
     if(state.players.filter(
-        player => player.teamId === teamB
+        player => player.team_id == teamB
     ).length < 1)
     {
         toast.error("There should be atleast 1 or more players on teamB")
@@ -50,17 +51,33 @@ const AddMatch = () => {
     return;
     }
 
-    dispatch({
-       type: 'CREATE_MATCH',
-       payload: {
-        teamAId: teamA,
-        teamBId: teamB,
+   const {data , error} = await supabase
+   .from("matches")
+   .insert([
+    {
+        team_a_id: teamA,
+        team_b_id: teamB,
         overs: formData.overs,
         date: formData.date,
-        tossWinnerId: Number(formData.tossWinner),
-        tossDecision: formData.tossDecision
-       }
-    })
+        toss_winner_id: Number(formData.tossWinner),
+        toss_decision: formData.tossDecision,
+        status: "live" 
+    }
+   ])
+   .select()
+   .single();
+
+   if(error)
+   {
+    console.log(error);
+    toast.error("Failed to create match");
+    return;
+   }
+
+   dispatch({
+    type: "CREATE_MATCH",
+    payload:data
+   });
 
 
     navigate('/matches');
@@ -77,12 +94,6 @@ const AddMatch = () => {
      }));
  }
 
-  
- 
-
- 
-
- 
 
   return (
     <div className='h-screen w-full'>
@@ -114,7 +125,7 @@ const AddMatch = () => {
                             <option key={team.id}
                             value={team.id}
                             disabled={team.id === teamB}>
-                                {team.teamName}
+                                {team.team_name}
                             </option>
                         ))
                         }
@@ -134,7 +145,7 @@ const AddMatch = () => {
                             <option key={team.id}
                             value={team.id}
                             disabled={team.id === teamA}>
-                                {team.teamName}
+                                {team.team_name}
                             </option>
                         ))
                         }
