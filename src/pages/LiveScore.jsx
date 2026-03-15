@@ -1,8 +1,9 @@
-import React, { useContext , useState } from "react";
+import React, { useContext , useState , useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
+import {supabase} from "../lib/supabaseCleint"
 
 const LiveScore = () => {
 
@@ -30,12 +31,33 @@ if (!currentMatch) {
   );
 }
 
+
+  useEffect(() => {
+
+  if (!currentMatch?.innings) {
+
+    dispatch({
+      type: "INIT_MATCH",
+      payload: currentMatch.id
+    });
+
+  }
+
+}, [currentMatch, dispatch]);
+
   const currentInnings = currentMatch.innings?.[currentMatch.currentInnings - 1];
+  if (!currentInnings) {
+  return (
+    <div className="w-full h-screen flex items-center justify-center">
+      Loading innings...
+    </div>
+  );
+}
 
   const totalBalls = currentInnings?.balls ?? 0;
 
     const ballsRemaining =
-    (currentMatch.overs * 6) - currentInnings.balls;
+    (currentMatch.overs * 6) - (currentInnings?.balls);
 
   const runsNeeded =
     currentMatch.target
@@ -48,8 +70,8 @@ if (!currentMatch) {
       : 0;
    
   // const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
-  const oversCompleted = Math.floor(currentInnings.balls / 6);
-  const ballsInOver = currentInnings.balls % 6;
+  const oversCompleted = Math.floor((currentInnings?.balls ?? 0)/ 6);
+  const ballsInOver = (currentInnings.balls ?? 0) % 6;
   const overDisplay = `${oversCompleted}.${ballsInOver}`;
 
 

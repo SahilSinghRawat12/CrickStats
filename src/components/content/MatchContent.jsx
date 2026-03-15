@@ -1,18 +1,41 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { CiSquarePlus } from "react-icons/ci";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
+import { supabase } from '../../lib/supabaseCleint';
+import { FetchContext } from '../../context/FetchContext';
+
 
 
 
 const MatchContent = () => {
 
+    const {getMatches , getTeams} = useContext(FetchContext);
     const {state , dispatch} = useContext(AppContext);
     const navigate = useNavigate();
     
     
+useEffect(()=>{
+  
+    const loadData = async ()=>{
+        
+        const teams = await getTeams();
+        const matches = await getMatches();
+   
+         dispatch({
+        type: "SET_TEAMS",
+        payload: teams
+        });
 
+        dispatch({
+         type: "SET_MATCHES",
+         payload: matches
+       });
+    };
+    
+    loadData();
+},[])
  
 
   return (
@@ -31,16 +54,19 @@ const MatchContent = () => {
                  
                {
                   state.matches.map( (match) =>  {
-                    const teamA = state.teams.find( (team) => team.id === match.teamAId);
-                    const teamB = state.teams.find( (team) => team.id === match.teamBId);
+                    
+                    const teamA = state.teams.find( (team) => team.id === match.team_a_id);
+                    const teamB = state.teams.find( (team) => team.id === match.team_b_id);
                     
                     return (
                         <div key={match.id} className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>  
                          <span key={match.id} className='text-2xl text-center font-medium'>
-                            {teamA?.teamName} 
+                            {teamA?.team_name} 
                             <div>vs</div> 
-                            {teamB?.teamName}</span>
+                            {teamB?.team_name}</span>
                              {/* <span className='text-md '>Winner : CSK</span> */}
+                        
+                        <span className="text-blue-800 font-bold text-xl">{match.status}</span>
 
                         <span className='text-sm  hover:text-blue-900 hover:font-semibold' onClick={ 
                             () => {

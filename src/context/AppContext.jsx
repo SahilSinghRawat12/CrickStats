@@ -137,6 +137,101 @@ export default function AppContextProvider({children})
                     }
                 ]
             };
+
+             case "SET_MATCHES":
+
+                return {
+                ...state,
+                matches: action.payload.map(match => {
+
+                    if (match.innings) return match;
+
+                    return {
+                    ...match,
+                    currentInnings: 1,
+                    innings: [
+                        {
+                        battingTeamId: match.team_a_id,
+                        bowlingTeamId: match.team_b_id,
+
+                        runs: 0,
+                        wickets: 0,
+                        balls: 0,
+                        oversCompleted: 0,
+                        ballsInOver: 0,
+
+                        strikerId: null,
+                        nonStrikerId: null,
+
+                        battingOrder: [],
+                        nextBatsmanIndex: 0,
+                        dismissedPlayers: [],
+
+                        bowlerId: null,
+                        battingStats: {},
+                        bowlingStats: {}
+                        }
+                    ]
+                    };
+
+                })
+                };
+
+                case "INIT_MATCH": {
+
+                const matchId = action.payload;
+
+                const matches = state.matches.map(match => {
+
+                    if (match.id !== matchId) return match;
+
+                    // already initialized
+                    if (match.innings) return match;
+
+                    const battingTeamId = match.team_a_id;
+                    const bowlingTeamId = match.team_b_id;
+
+                    const battingPlayers = state.players.filter(
+                    p => p.teamId === battingTeamId
+                    );
+
+                    const battingOrder = battingPlayers.map(p => p.id);
+
+                    return {
+                    ...match,
+                    currentInnings: 1,
+                    innings: [
+                        {
+                        battingTeamId,
+                        bowlingTeamId,
+
+                        runs: 0,
+                        wickets: 0,
+                        balls: 0,
+                        oversCompleted: 0,
+                        ballsInOver: 0,
+
+                        strikerId: battingOrder[0] || null,
+                        nonStrikerId: battingOrder[1] || null,
+
+                        battingOrder,
+                        nextBatsmanIndex: 2,
+                        dismissedPlayers: [],
+
+                        bowlerId: null,
+                        battingStats: {},
+                        bowlingStats: {}
+                        }
+                    ]
+                    };
+
+                });
+
+                return {
+                    ...state,
+                    matches
+                };
+                }
                 
             case "SET_CURRENT_MATCH" : return {
                 ...state,
