@@ -3,12 +3,16 @@ import { AppContext } from "../context/AppContext";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
-import {supabase} from "../lib/supabaseCleint"
+import { supabase } from "../lib/supabaseCleint"
+import { FetchContext } from "../context/FetchContext";
 
 const LiveScore = () => {
 
+  const {getPlayers , getTeams , getMatches} = useContext(FetchContext);
   const {state , dispatch} = useContext(AppContext);
   const navigate = useNavigate();
+
+  const [innings , setInnings] = useState(null);
 
   const [showWicketMenu, setShowWicketMenu] = useState(false);
   const [showNoBallMenu, setShowNoBallMenu] = useState(false);
@@ -31,58 +35,150 @@ if (!currentMatch) {
   );
 }
 
+  useEffect(()=>{
+    const loadData = async () => {
 
-  useEffect(() => {
+      const teams = await getTeams();
 
-  if (!currentMatch?.innings) {
+      const players = await getPlayers();
 
-    dispatch({
-      type: "INIT_MATCH",
-      payload: currentMatch.id
-    });
+      const matches = await getMatches();
 
+       dispatch({
+        type: "SET_TEAMS",
+        payload: teams
+        });
+
+      dispatch({
+      type: "SET_PLAYERS",
+      payload: players
+      });
+
+      dispatch({
+         type: "SET_MATCHES",
+         payload: matches
+       });
+
+    };
+
+    loadData();
+  }, [])
+
+
+
+async function createFirstInnings(match) {
+
+  // Check existing innings
+  const { data: exsistingInnings } = await supabase
+    .from("match_innings")
+    .select("*")
+    .eq("match_id", match.id);
+
+  if (exsistingInnings.length > 0) {
+    return; // innings already exists
   }
 
-}, [currentMatch, dispatch]);
+  //  Determine toss loser
+  const tossLoser =
+    match.toss_winner_id === match.team_a_id
+      ? match.team_b_id
+      : match.team_a_id;
 
-  const currentInnings = currentMatch.innings?.[currentMatch.currentInnings - 1];
-  if (!currentInnings) {
+  //  Determine batting team
+  const battingTeam =
+    match.toss_decision === "bat"
+      ? match.toss_winner_id
+      : tossLoser;
+
+  //  Determine bowling team
+  const bowlingTeam =
+    battingTeam === match.team_a_id
+      ? match.team_b_id
+      : match.team_a_id;
+
+  //  Insert first innings
+  const battingPlayers = state.players.filter(
+  p => p.team_id === battingTeam
+  );
+
+  await supabase.from("match_innings").insert({
+  match_id: match.id,
+  batting_team_id: battingTeam,
+  bowling_team_id: bowlingTeam,
+  striker_id: battingPlayers[0]?.id,
+  non_striker_id: battingPlayers[1]?.id
+});
+
+}
+
+//creating first inning
+  useEffect(() => {
+
+  if (!currentMatch) {
+       return;
+  }
+
+  createFirstInnings(currentMatch);
+
+}, [currentMatch]);
+
+
+//fetching inngins
+useEffect(() => {
+
+  if (!currentMatch) return;
+
+  async function fetchInnings() {
+
+    const { data, error } = await supabase
+      .from("match_innings")
+      .select("*")
+      .eq("match_id", currentMatch.id)
+      .eq("is_completed", false)
+      .maybeSingle();
+
+      if (!data) {
+      console.log("No innings found yet");
+      return;
+    }
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setInnings(data);
+  }
+
+  fetchInnings();
+
+}, [currentMatch]);
+
+const currentInnings = innings;
+
+if (!currentInnings) {
   return (
     <div className="w-full h-screen flex items-center justify-center">
-      Loading innings...
+      Loading match...
     </div>
   );
 }
 
-  const totalBalls = currentInnings?.balls ?? 0;
+const oversCompleted = Math.floor((currentInnings?.balls ?? 0) / 6);
+const ballsInOver = (currentInnings?.balls ?? 0) % 6;
+const overDisplay = `${oversCompleted}.${ballsInOver}`;
 
-    const ballsRemaining =
-    (currentMatch.overs * 6) - (currentInnings?.balls);
-
-  const runsNeeded =
-    currentMatch.target
-      ? currentMatch.target - currentInnings.runs
-      : 0;
-
-  const requiredRunRate =
-    ballsRemaining > 0
-      ? ((runsNeeded / ballsRemaining) * 6).toFixed(2)
-      : 0;
-   
-  // const overDisplay = `${currentInnings.oversCompleted}.${currentInnings.ballsInOver}`;
-  const oversCompleted = Math.floor((currentInnings?.balls ?? 0)/ 6);
-  const ballsInOver = (currentInnings.balls ?? 0) % 6;
-  const overDisplay = `${oversCompleted}.${ballsInOver}`;
+  
 
 
-  const teamA = state.teams.find( t => t.id === currentMatch.teamAId);
-  const teamB = state.teams.find( t => t.id === currentMatch.teamBId);
+  const teamA = state.teams.find( t => t.id === currentMatch.team_a_id);
+  const teamB = state.teams.find( t => t.id === currentMatch.team_b_id);
 
   const tossLoserId = currentMatch.tossWinnerId === currentMatch.teamAId ? currentMatch.teamBId : currentMatch.teamAId;
 
 
-  const battingTeamId = currentInnings?.battingTeamId;
-  const bowlingTeamId = currentInnings?.bowlingTeamId;
+  const battingTeamId = currentInnings?.batting_team_id;
+  const bowlingTeamId = currentInnings?.bowling_team_id;
 
   const battingTeam = state.teams.find( t => t.id === battingTeamId);
   const bowlingTeam = state.teams.find( t => t.id === bowlingTeamId);
@@ -90,19 +186,208 @@ if (!currentMatch) {
   const battingTeamName = battingTeam?.teamName || "";
   const bowlingTeamName = bowlingTeam?.teamName || "";
 
-  const battingTeamPlayers = state.players.filter(p => p.teamId === battingTeamId)
-  const bowlingTeamPlayers = state.players.filter(p => p.teamId === bowlingTeamId)
+  const battingTeamPlayers = state.players.filter(p => p.team_id === battingTeamId)
+  const bowlingTeamPlayers = state.players.filter(p => p.team_id === bowlingTeamId)
 
-  const bowlers =  bowlingTeamPlayers.filter( p => p.playerRole === "Bowler" || p.playerRole === "All Rounder"  )
+  const bowlers =  bowlingTeamPlayers.filter( p => p.player_role === "Bowler" || p.player_role === "All Rounder"  )
+
+//bowler selection
+async function selectBowler(bowlerId) {
+
+  const { error } = await supabase
+    .from("match_innings")
+    .update({
+      bowler_id: bowlerId
+    })
+    .eq("id", innings.id);
+
+  if (error) {
+    console.log(error);
+    toast.error("Failed to select bowler");
+    return;
+  }
+
+  const { data } = await supabase
+    .from("match_innings")
+    .select("*")
+    .eq("id", innings.id)
+    .single();
+
+  setInnings(data);
+
+  toast.success("Bowler Selected");
+}
+
+
+//adding runs 
+async function addRun(run) {
+
+  if (!innings) return;
+
+  if (!innings.bowler_id) {
+  toast.error("Select a bowler first");
+  return;
+}
+
+   if (currentMatch.isFinished) {
+     toast.error("Match Finished");
+     return;
+   }
+
+ const maxBalls = currentMatch.overs * 6;
+
+   if (currentInnings.balls >= maxBalls) {
+     toast.error("Overs Completed");
+     return;
+   }
+
+
+  // calculate over + ball
+  const overNumber = Math.floor(innings.balls / 6);
+  const ballNumber = (innings.balls % 6) + 1;
+
+  // insert ball
+  const { error: ballError } = await supabase
+    .from("balls")
+    .insert({
+      match_id: currentMatch.id,
+      innings_id: innings.id,
+      batsman_id: innings.striker_id,
+      bowler_id: innings.bowler_id,
+      over_number: overNumber,
+      ball_number: ballNumber,
+      runs: run
+    });
+
+  if (ballError) {
+    console.log(ballError);
+    toast.error("Ball insert failed");
+    return;
+  }
+
+  // update innings
+  let newStriker = innings.striker_id;
+let newNonStriker = innings.non_striker_id;
+
+// change strike for 1 or 3 runs
+if (run === 1 || run === 3) {
+  newStriker = innings.non_striker_id;
+  newNonStriker = innings.striker_id;
+}
+
+// end of over strike change
+if ((innings.balls + 1) % 6 === 0) {
+  const temp = newStriker;
+  newStriker = newNonStriker;
+  newNonStriker = temp;
+}
+
+  const { error: inningsError } = await supabase
+    .from("match_innings")
+    .update({
+      runs: innings.runs + run,
+      balls: innings.balls + 1,
+      striker_id: newStriker,
+      non_striker_id: newNonStriker
+    })
+    .eq("id", innings.id);
+
+  if (inningsError) {
+    console.log(inningsError);
+  }
+
+  //get striker
+  const striker = battingTeamPlayers.find( 
+    p => p.id === innings.striker_id
+  );
+
+  //check existing stats
+  const {data: existingStats} = await supabase
+  .from("batting_stats")
+  .select("*")
+  .eq("match_id", currentMatch.id)
+  .eq("player_id", striker.id)
+  .single();
+
+  //insert or update
+  if(!existingStats)
+  {
+
+    await supabase.from("batting_stats").insert({
+    match_id: currentMatch.id,
+    player_id: striker.id,
+    runs: run,
+    balls: 1,
+    fours: run === 4 ? 1 : 0,
+    sixes: run === 6 ? 1 : 0
+  });
+
+  }  else {
+
+    await supabase
+  .from("batting_stats")
+  .update({
+    runs: existingStats.runs + run,
+    balls: existingStats.balls + 1,
+    fours: run === 4 ? existingStats.fours + 1 : existingStats.fours,
+    sixes: run === 6 ? existingStats.sixes + 1 : existingStats.sixes
+  })
+  .eq("id", existingStats.id);
+
+  }
+
+  //bowler stats
+const bowlerId = innings.bowler_id;
+
+const { data: bowlerStats } = await supabase
+.from("bowling_stats")
+.select("*")
+.eq("match_id", currentMatch.id)
+.eq("player_id", bowlerId)
+.single();
+
+if (!bowlerStats) {
+
+  await supabase.from("bowling_stats").insert({
+    match_id: currentMatch.id,
+    player_id: bowlerId,
+    runs: run,
+    balls: 1
+  });
+
+} else {
+
+  await supabase
+  .from("bowling_stats")
+  .update({
+    runs: bowlerStats.runs + run,
+    balls: bowlerStats.balls + 1
+  })
+  .eq("id", bowlerStats.id);
+
+}
+
+  // reload innings
+  const { data } = await supabase
+    .from("match_innings")
+    .select("*")
+    .eq("id", innings.id)
+    .single();
+
+  setInnings(data);
+
+}
+
 
   return (
+
     <div className="w-full min-h-screen px-12 py-8 bg-gray-50">
       <div className='left-5 top-5 absolute cursor-pointer' 
                       onClick={()=> {navigate(-1) || navigate('/matches')}}>
                       <MdArrowBackIosNew/>
-                    </div>
+         </div>
 
-       {/* ⭐ WINNER BANNER */}
+       {/*WINNER BANNER */}
     {currentMatch.isFinished && (
   <div className="bg-green-600 text-white p-4 rounded mb-4 text-center font-bold">
 
@@ -118,9 +403,9 @@ if (!currentMatch) {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold capitalize">
-          {teamA?.teamName}
+          {teamA?.team_name}
           <div>vs</div>
-          {teamB?.teamName}
+          {teamB?.team_name}
         </h1>
         <p className="text-gray-600 mt-1">
           Innings {currentMatch.currentInnings} of 2 · <span className="capitalize font-bold">Batting: </span> 
@@ -133,7 +418,7 @@ if (!currentMatch) {
 
       {/* Score Summary */}
       <div className="bg-white border rounded-lg p-4 mb-8">
-        <h2 className="text-xl font-semibold capitalize">{battingTeam?.teamName} - {currentInnings?.runs ?? 0}/{currentInnings.wickets ?? 0} ({overDisplay})</h2>
+        <h2 className="text-xl font-semibold capitalize">{battingTeam?.team_name} - {currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0} ({overDisplay})</h2>
         {
           currentMatch.currentInnings === 2 && 
           (<p className="text-gray-500 mt-1">Target: {currentMatch.target}</p>)
@@ -145,7 +430,7 @@ if (!currentMatch) {
 
         {/* Batting */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {battingTeam?.teamName}</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {battingTeam?.team_name}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Batsman</span>
@@ -160,31 +445,23 @@ if (!currentMatch) {
 
           {battingTeamPlayers.map((p) => {
 
-             const isStriker = p.id === currentInnings.strikerId;
-              const isNonStriker = p.id === currentInnings.nonStrikerId;
-              const isOut = currentInnings.dismissedPlayers.includes(p.id);
-
-              const stats = currentInnings.battingStats[p.id] || {};
-
             return (
               <div
               key={p.id}
-              className={`py-3 flex border-b last:border-none 
-              ${(isStriker || isNonStriker) ? "bg-blue-100" : ""}`}
-              >
+              className="py-3 flex border-b last:border-none">
                 
               <span className="w-1/2">
-                {isStriker && "* "}
-                {p.playerName}
-                {isOut && <span className="bg-blue-700 text-white rounded-full ml-3 text-sm p-1 ">W</span>}
+                
+                {p.player_name}
+                
               </span>
 
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{stats.runs ?? 0}</span>
-                <span className="w-full">{stats.balls ?? 0}</span>
-                <span className="w-full">{stats.fours ?? 0}</span>
-                <span className="w-full">{stats.sixes ?? 0}</span>
-                <span className="w-full">{stats.sr ?? 0}</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
               </div>
             </div>
              )
@@ -193,7 +470,7 @@ if (!currentMatch) {
 
         {/* Bowling */}
         <div className="bg-white border rounded-lg p-5">
-          <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {bowlingTeam?.teamName}</h3>
+          <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {bowlingTeam?.team_name}</h3>
 
           <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
             <span className="w-1/2">Bowler</span>
@@ -208,55 +485,24 @@ if (!currentMatch) {
           {
           bowlers.map((b) => {
 
-            const isSelected = b.id === currentInnings.bowlerId;
-            const canChange = currentInnings.ballsInOver === 0;
-
-            // get bowler match stats
-              const stats = currentInnings.bowlingStats[b.id] || {
-                runs: 0,
-                balls: 0,
-                wickets: 0,
-                er: 0
-              };
-
-               // calculate overs from balls
-              const oversCompleted = Math.floor(stats.balls / 6);
-              const ballsInOver = stats.balls % 6;
-              const oversDisplay = `${oversCompleted}.${ballsInOver}`;
-
               return (
             
-            <div key={b.id} 
-             onClick={() => {
-              if(!canChange) 
-              {
-                 toast.error("Cannot change bowler before over is completed");
-                 return;
-              }
+            <div
+              key={b.id}
+              className={`py-3 flex border-b last:border-none cursor-pointer
+              ${innings?.bowler_id === b.id ? "bg-blue-200" : ""}`}
 
-              dispatch({
-                  type: "SET_BOWLER",
-                  payload: {bowlerId: b.id}
-                 });
-
-                 toast.success("Bowler selected"); 
-             }}
-
-             
-            className={`py-3 flex border-b last:border-none cursor-pointer
-             ${isSelected ? "bg-blue-200" : ""}
-             ${!canChange ? "opacity-60 cursor-not-allowed" : ""}`}>
-
-              <span className="w-1/2">{b.playerName}</span>
+              onClick={() => selectBowler(b.id)}
+              >
+              <span className="w-1/2">{b.player_name}</span>
 
               <div className="flex w-1/2 text-center">
-                <span className="w-full">{oversDisplay}</span>
-                <span className="w-full">{stats.runs}</span>
-                <span className="w-full">{stats.wickets}</span>
-                <span className="w-full">{stats.er}</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
+              <span className="w-full">0</span>
               </div>
-            </div>
-
+              </div>
               )} )
               }
         </div>
@@ -287,31 +533,7 @@ if (!currentMatch) {
           {[0, 1, 2, 3, 4, 6].map((run) => (
             <button
               key={run}
-              onClick={ () => {
-
-                  if (currentMatch.isFinished) {
-                    toast.error("Match Finished");
-                    return;
-                  }
-
-                 const maxBalls = currentMatch.overs * 6;
-
-                  if (currentInnings.balls >= maxBalls) {
-                    toast.error("Overs Completed");
-                    return;
-                  }
-                  
-                  if (!currentInnings.bowlerId) {
-                  toast.error("Select a bowler first");
-                  return;
-                  }
-                    
-                dispatch({
-                  type: "ADD_RUN",
-                  payload: { runs: run}
-                });
-              }
-              }
+              onClick={ () => addRun(run) }
               className="px-6 py-2 bg-white border rounded-md
                          hover:bg-black hover:text-white
                          transition-colors duration-200"
@@ -345,14 +567,12 @@ if (!currentMatch) {
                     return;
                   }
 
-              if (!currentInnings.bowlerId) {
-                toast.error("Select a bowler first");
-                return;
-              }
+                if (!currentInnings.bowler_id) {
+                  toast.error("Select a bowler first");
+                  return;
+                }
 
-              dispatch({
-                type: "ADD_WIDE" 
-              });
+            
 
             }}
           >
@@ -397,10 +617,7 @@ if (!currentMatch) {
                     return;
                   }
 
-                  dispatch({
-                    type: "ADD_NO_BALL_RUN",
-                    payload: { runs: r }
-                  });
+               
 
                   setShowNoBallMenu(false);
                 }}
@@ -458,10 +675,7 @@ if (!currentMatch) {
                 return;
               }
 
-              dispatch({
-                type: "ADD_WICKET",
-                payload: { outPlayerId: currentInnings.strikerId }
-              });
+            
               setShowWicketMenu(false);
             }}
             className="hover:bg-gray-100 px-3 py-1 rounded"
@@ -500,10 +714,7 @@ if (!currentMatch) {
               }
 
 
-              dispatch({
-                type: "ADD_WICKET",
-                payload: { outPlayerId: currentInnings.nonStrikerId }
-              });
+             
               setShowWicketMenu(false);
             }}
             className="hover:bg-gray-100 px-3 py-1 rounded"
@@ -526,7 +737,7 @@ if (!currentMatch) {
           className="px-6 py-2 bg-blue-600 text-white rounded-md
                      hover:bg-blue-700 transition-colors duration-200"
 
-           onClick={() => dispatch({ type: "END_INNINGS" })}
+         
         >
           End Innings
         </button>
