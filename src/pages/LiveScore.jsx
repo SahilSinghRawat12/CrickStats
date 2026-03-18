@@ -30,6 +30,31 @@
     [state.matches, state.currentMatchId]);
 
       const currentInnings = innings;
+        
+
+
+// batting and bowling function
+  const fetchBattingStats = async () => {
+  if (!currentMatch) return;
+
+  const { data } = await supabase
+    .from("batting_stats")
+    .select("*")
+    .eq("match_id", currentMatch.id);
+
+  setBattingStats(data || []);
+};
+
+const fetchBowlingStats = async () => {
+  if (!currentMatch) return;
+
+  const { data } = await supabase
+    .from("bowling_stats")
+    .select("*")
+    .eq("match_id", currentMatch.id);
+
+  setBowlingStats(data || []);
+};
 
 
 // loading data 
@@ -63,41 +88,43 @@
 }, []);
 
 
-// fetching batting stats
-useEffect(()=>{
+// // fetching batting stats
+// useEffect(()=>{
 
-  if(!currentMatch) return;
+//   if(!currentMatch) return;
 
-  const fetchStats = async ()=> {
-    const {data} = await supabase
-    .from("batting_stats")
-    .select("*")
-    .eq("match_id", currentMatch.id);
+//   const fetchStats = async ()=> {
+//     const {data} = await supabase
+//     .from("batting_stats")
+//     .select("*")
+//     .eq("match_id", currentMatch.id);
 
-    setBattingStats( data || []);
-  };
+//     setBattingStats( data || []);
+//   };
 
-  fetchStats();
+//   fetchStats();
 
-},[currentMatch])
+// },[currentMatch])
 
-//fetching bowling stats 
+// //fetching bowling stats 
 
-useEffect(()=>{
-  if(!currentMatch) return;
+// useEffect(()=>{
+//   if(!currentMatch) return;
 
-  const fetchBowlingStats = async () => {
-    const {data} = await supabase
-    .from("bowling_stats")
-    .select("*")
-    .eq("match_id", currentMatch.id);
+//   const fetchBowlingStats = async () => {
+//     const {data} = await supabase
+//     .from("bowling_stats")
+//     .select("*")
+//     .eq("match_id", currentMatch.id);
 
-    setBowlingStats( data || []);
-  };
+//     setBowlingStats( data || []);
+//   };
 
-  fetchBowlingStats();
+//   fetchBowlingStats();
 
-}, [currentMatch])
+// }, [currentMatch])
+
+
 
 // creatin first inings
   async function createFirstInnings(match) {
@@ -159,7 +186,108 @@ useEffect(()=>{
     setInnings(data);
   }
 
+  };
+
+
+
+
+
+  // wickets function
+  async function addWicket(type) {
+  if (!innings) return;
+
+  if (!innings.bowler_id) {
+    toast.error("Select a bowler first");
+    return;
   }
+
+  const battingPlayers = state.players.filter(
+    p => p.team_id === innings.batting_team_id
+  );
+
+  const totalPlayers = battingPlayers.length;
+
+  const currentWickets = innings.wickets || 0;
+
+  // all out check
+  if (currentWickets >= totalPlayers - 1) {
+    toast.error("All out!");
+    return;
+  }
+
+  // who is out
+  const outPlayerId =
+    type === "striker"
+      ? innings.striker_id
+      : innings.non_striker_id;
+
+  // finding next batsman
+  const playedIds = [
+    innings.striker_id,
+    innings.non_striker_id
+  ];
+
+  const nextBatsman = battingPlayers.find(
+    p => !playedIds.includes(p.id)
+  );
+
+  if (!nextBatsman) {
+    toast.error("No batsman left");
+    return;
+  }
+
+  let newStriker = innings.striker_id;
+  let newNonStriker = innings.non_striker_id;
+
+  if (type === "striker") {
+    newStriker = nextBatsman.id;
+  } else {
+    newNonStriker = nextBatsman.id;
+  }
+
+  // updating innings
+  const { error } = await supabase
+    .from("match_innings")
+    .update({
+      wickets: currentWickets + 1,
+      striker_id: newStriker,
+      non_striker_id: newNonStriker,
+      balls: innings.balls + 1
+    })
+    .eq("id", innings.id);
+
+  if (error) {
+    console.log(error);
+    toast.error("Wicket failed");
+    return;
+  }
+
+  // update bowler stats
+  const { data: bowlerStats } = await supabase
+    .from("bowling_stats")
+    .select("*")
+    .eq("match_id", currentMatch.id)
+    .eq("player_id", innings.bowler_id)
+    .single();
+
+  if (!bowlerStats) {
+    await supabase.from("bowling_stats").insert({
+      match_id: currentMatch.id,
+      player_id: innings.bowler_id,
+      runs: 0,
+      balls: 1,
+      wickets: 1
+    });
+  } else {
+    await supabase
+      .from("bowling_stats")
+      .update({
+        balls: bowlerStats.balls + 1,
+        wickets: (bowlerStats.wickets || 0) + 1
+      })
+      .eq("id", bowlerStats.id);
+  }
+}
 
 
 
@@ -200,7 +328,7 @@ useEffect(()=>{
 
 
 
-  // supabase realtime 
+  // supabase realtime for scoring and match
   useEffect(() => {
   if (!currentMatch) return;
 
@@ -225,9 +353,54 @@ useEffect(()=>{
   };
 }, [currentMatch]);
 
+//realtime for batting stats and batting stats
+
+
+
+useEffect(() => {
+  if (!currentMatch) return;
+
+  const channel = supabase
+    .channel(`stats-${currentMatch.id}`)
+
+    // batting stats
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "batting_stats",
+        filter: `match_id=eq.${currentMatch.id}`
+      },
+      () => {
+        fetchBattingStats();
+      }
+    )
+
+    //bowling stats
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "bowling_stats",
+        filter: `match_id=eq.${currentMatch.id}`
+      },
+      () => {
+        fetchBowlingStats();
+      }
+    )
+
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentMatch]);
+
 
   const battingTeamId = currentInnings?.batting_team_id;
-    
+
    const battingTeamPlayers = useMemo(() =>
   state.players.filter(p => p.team_id === battingTeamId),
     [state.players, battingTeamId]);
@@ -740,7 +913,8 @@ useEffect(()=>{
 
           <div >
         <button
-          onClick={() => setShowWicketMenu(prev => !prev)}
+          onClick={() => 
+          setShowWicketMenu(prev => !prev)}
           className="px-4 py-2 border rounded bg-white hover:bg-gray-900 hover:text-white"
         >
           Wicket
@@ -752,33 +926,34 @@ useEffect(()=>{
             <button
               onClick={() => {   
                 
-                if (currentMatch.isFinished) {
-                      toast.error("Match Finished");
-                      return;
-                    }
+                // if (currentMatch.isFinished) {
+                //       toast.error("Match Finished");
+                //       return;
+                //     }
 
-                const maxBalls = currentMatch.overs * 6;
+                // const maxBalls = currentMatch.overs * 6;
 
-                if (currentInnings.balls >= maxBalls) {
-                  toast.error("Overs Completed");
-                  return;
-                }
+                // if (currentInnings.balls >= maxBalls) {
+                //   toast.error("Overs Completed");
+                //   return;
+                // }
 
-                if (currentInnings.isCompleted) {
-                  toast.error("Innings Completed");
-                  return;
-                }
+                // if (currentInnings.isCompleted) {
+                //   toast.error("Innings Completed");
+                //   return;
+                // }
 
-                if (!currentInnings.striker_id) {
-                  toast.error("No striker available");
-                  return;
-                }
+                // if (!currentInnings.striker_id) {
+                //   toast.error("No striker available");
+                //   return;
+                // }
 
-                if (!currentInnings.bowler_id) {
-                  toast.error("Select a bowler first");
-                  return;
-                }
+                // if (!currentInnings.bowler_id) {
+                //   toast.error("Select a bowler first");
+                //   return;
+                // }
 
+                addWicket("striker");
               
                 setShowWicketMenu(false);
               }}
@@ -790,34 +965,34 @@ useEffect(()=>{
             <button
               onClick={() => {
 
-                if (currentMatch.isFinished) {
-                      toast.error("Match Finished");
-                      return;
-                    }
+                // if (currentMatch.isFinished) {
+                //       toast.error("Match Finished");
+                //       return;
+                //     }
                     
-                    const maxBalls = currentMatch.overs * 6;
+                //     const maxBalls = currentMatch.overs * 6;
 
-                if (currentInnings.balls >= maxBalls) {
-                  toast.error("Overs Completed");
-                  return;
-                }
+                // if (currentInnings.balls >= maxBalls) {
+                //   toast.error("Overs Completed");
+                //   return;
+                // }
 
-                if (currentInnings.isCompleted) {
-                  toast.error("Innings Completed");
-                  return;
-                }
+                // if (currentInnings.isCompleted) {
+                //   toast.error("Innings Completed");
+                //   return;
+                // }
 
-                if (!currentInnings.striker_id) {
-                  toast.error("No striker available");
-                  return;
-                }
+                // if (!currentInnings.striker_id) {
+                //   toast.error("No striker available");
+                //   return;
+                // }
 
-                if (!currentInnings.bowler_id) {
-                  toast.error("Select a bowler first");
-                  return;
-                }
+                // if (!currentInnings.bowler_id) {
+                //   toast.error("Select a bowler first");
+                //   return;
+                // }
 
-
+                addWicket("non-striker");
               
                 setShowWicketMenu(false);
               }}
