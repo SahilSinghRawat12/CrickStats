@@ -70,6 +70,7 @@ useEffect(()=>{
 
                         <span className='text-sm  hover:text-blue-900 hover:font-semibold' onClick={ 
                             () => {
+                                localStorage.setItem("currentMatchId", match.id);
                                 dispatch({
                                     type: 'SET_CURRENT_MATCH',
                                     payload: match.id
