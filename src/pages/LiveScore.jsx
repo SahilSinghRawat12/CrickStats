@@ -550,6 +550,11 @@ useEffect(() => {
       return;
     }
 
+    // instant ui update
+  setInnings(prev => ({
+    ...prev,
+    bowler_id: bowlerId
+  }));
 
     toast.success("Bowler Selected");
   }
@@ -1065,7 +1070,7 @@ async function finishMatch() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold capitalize">
             {teamA?.team_name}
-            <div>vs</div>
+            <div className="mx-24">vs</div>
             {teamB?.team_name}
           </h1>
           <p className="text-gray-600 mt-1">
