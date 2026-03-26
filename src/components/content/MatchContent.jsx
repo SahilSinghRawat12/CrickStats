@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { AppContext } from '../../context/AppContext';
 import { supabase } from '../../lib/supabaseCleint';
 import { FetchContext } from '../../context/FetchContext';
+import toast from 'react-hot-toast';
 
 
 
@@ -36,6 +37,25 @@ useEffect(()=>{
     
     loadData();
 },[])
+
+
+const deleteMatch = async (matchId) => {
+  const { error } = await supabase
+    .from("matches")
+    .delete()
+    .eq("id", matchId);
+
+  if (error) {
+    console.log(error);
+    toast.error("Failed to delete match");
+    return;
+  }
+
+  toast.success("Match deleted");
+
+  const matches = await getMatches();
+  dispatch({ type: "SET_MATCHES", payload: matches });
+};
  
 
   return (
@@ -79,13 +99,21 @@ useEffect(()=>{
                                 navigate('/matches/live_match');
                             }
                         }>View Details</span>
+                        
+                        <button
+                        onClick={() => deleteMatch(match.id)}
+                        className="mt-2 px-3 py-1 bg-red-500 text-white rounded
+                         hover:bg-red-600 " >
+                        Delete
+                        </button>
                          </div>
                       )
                        
                         })
                }
-   
+               
            </div>
+           
        </div>
   )
 }

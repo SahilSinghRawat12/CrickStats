@@ -161,7 +161,7 @@ const fetchBowlingStats = async () => {
         p => p.team_id === battingTeam
       );
 
-      if(battingPlayers.length < 2) return;
+      if(battingPlayers.length === 0) return;
 
         const { data, error } = await supabase
           .from("match_innings")
@@ -169,8 +169,8 @@ const fetchBowlingStats = async () => {
             match_id: match.id,
             batting_team_id: battingTeam,
             bowling_team_id: bowlingTeam,
-            striker_id: battingPlayers[0].id,
-            non_striker_id: battingPlayers[1].id
+            striker_id: battingPlayers[0]?.id,
+            non_striker_id: battingPlayers[1]?.id || null
           })
           .select()
           .maybeSingle();
@@ -245,10 +245,43 @@ const fetchBowlingStats = async () => {
     p => !usedPlayers.includes(p.id)
   );
 
-  if (!nextBatsman) {
-    toast.error("No batsman left");
+  // last player logic
+if (!nextBatsman) {
+
+  const remainingPlayer =
+    type === "striker"
+      ? innings.non_striker_id
+      : innings.striker_id;
+
+  if (!remainingPlayer) {
+    // ALL OUT
+    await supabase
+      .from("match_innings")
+      .update({
+        wickets: currentWickets + 1,
+        balls: innings.balls + 1,
+        is_completed: true
+      })
+      .eq("id", innings.id);
+
+    toast.error("All out!");
     return;
   }
+
+  // ONE PLAYER LEFT
+  await supabase
+    .from("match_innings")
+    .update({
+      wickets: currentWickets + 1,
+      balls: innings.balls + 1,
+      striker_id: remainingPlayer,
+      non_striker_id: null
+    })
+    .eq("id", innings.id);
+
+  toast("Last player batting alone");
+  return;
+}
 
   let newStriker = innings.striker_id;
   let newNonStriker = innings.non_striker_id;
@@ -621,7 +654,7 @@ useEffect(() => {
   let newNonStriker = innings.non_striker_id;
 
   // change strike for 1 or 3 runs
-  if (run === 1 || run === 3) {
+  if ((run === 1 || run === 3) && innings.non_striker_id) {
     newStriker = innings.non_striker_id;
     newNonStriker = innings.striker_id;
   }
@@ -661,16 +694,16 @@ if ((innings.balls + 1) % 6 === 0) {
 if (currentMatch.currentInnings === 2) {
   if (innings.runs + run >= currentMatch.target) {
 
-    await supabase
-      .from("matches")
-      .update({
-        isfinished: true,
-        winner_team_id: innings.batting_team_id,
-        result_text: "won by chasing"
-      })
-      .eq("id", currentMatch.id);
+    // await supabase
+    //   .from("matches")
+    //   .update({
+    //     isfinished: true,
+    //     winner_team_id: innings.batting_team_id,
+    //     result_text: "won by chasing"
+    //   })
+    //   .eq("id", currentMatch.id);
 
-    toast.success("Match Finished!");
+    // toast.success("Match Finished!");
   }
 } 
 
@@ -720,7 +753,7 @@ if (currentMatch.currentInnings === 2) {
     }
 
     //bowler stats
-  const bowlerId = newBowler || innings.bowler_id;
+  const bowlerId =  innings.bowler_id;
 
   const { data: bowlerStats } = await supabase
   .from("bowling_stats")
@@ -817,7 +850,7 @@ const { data: bowlerStats } = await supabase
   .select("*")
   .eq("match_id", currentMatch.id)
   .eq("player_id", bowlerId)
-  .single();
+  .maybeSingle();
 
 if (!bowlerStats) {
   await supabase.from("bowling_stats").insert({
@@ -909,7 +942,7 @@ const { data: bowlerStats } = await supabase
   .select("*")
   .eq("match_id", currentMatch.id)
   .eq("player_id", bowlerId)
-  .single();
+  .maybeSingle();
 
 if (!bowlerStats) {
   await supabase.from("bowling_stats").insert({
@@ -945,25 +978,28 @@ async function endInnings() {
     return;
   }
 
-  // calculate target 
-  const target = (innings.runs || 0) + 1;
+   // first innings
+  if (currentMatch.currentInnings === 1) {
 
-  // updating match for 2nd innings
-  const { error: matchError } = await supabase
-    .from("matches")
-    .update({
-      currentInnings: 2,
-      target: target
-    })
-    .eq("id", currentMatch.id);
+    const target = (innings.runs || 0) + 1;
 
-  if (matchError) {
-    console.log(matchError);
-    toast.error("Match update failed");
-    return;
+    await supabase
+      .from("matches")
+      .update({
+        currentInnings: 2,
+        target: target
+      })
+      .eq("id", currentMatch.id);
+
+    toast.success("2nd innings started");
+
+  } 
+// 2nd innings
+  else {
+    toast.success("Match completed. Finishing...");
+    await finishMatch();
   }
 
-  toast.success("Innings ended. Starting 2nd innings");
 
   //refresh match state
   const updatedMatches = await getMatches();
@@ -971,13 +1007,6 @@ async function endInnings() {
 
   // reset local innings 
   setInnings(null);
-
-// if (currentMatch.currentInnings === 1) {
-//   await createInnings({
-//     ...currentMatch,
-//     currentInnings: 2
-//   });
-//   }
   
 }
 
@@ -1057,7 +1086,7 @@ async function finishMatch() {
       {currentMatch.isfinished && (
     <div className="bg-green-600 text-white p-4 rounded mb-4 text-center font-bold">
 
-      {state.teams.find(t => t.id === currentMatch.winner_team_id)?.teamName}
+      {state.teams.find(t => t.id === currentMatch.winner_team_id)?.team_name}
 
       {" "}
       {currentMatch.result_text}
