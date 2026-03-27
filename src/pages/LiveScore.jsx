@@ -618,6 +618,8 @@ useEffect(() => {
       return;
     }
 
+    const originalStrikerId = innings.striker_id;
+
   const maxBalls = currentMatch.overs * 6;
 
     if (currentInnings.balls >= maxBalls) {
@@ -708,8 +710,8 @@ if (currentMatch.currentInnings === 2) {
 } 
 
     //get striker
-    const striker = battingTeamPlayers.find( 
-      p => String(p.id) === String(newStriker)
+    const striker = battingTeamPlayers.find(
+    p => String(p.id) === String(originalStrikerId)
     );
 
     if (!striker) {
@@ -934,6 +936,53 @@ if (innings.balls >= maxBalls) {
     })
     .eq("id", innings.id);
 
+    //updating batsman stats
+    await supabase
+    .from("match_innings")
+    .update({
+      runs: innings.runs + totalRuns,
+      striker_id: newStriker,
+      non_striker_id: newNonStriker
+    })
+    .eq("id", innings.id);
+
+    // BATSMAN STATS UPDATE
+
+const originalStrikerId = innings.striker_id;
+
+if (extraRuns > 0) {
+
+  const { data: existingStats } = await supabase
+    .from("batting_stats")
+    .select("*")
+    .eq("match_id", currentMatch.id)
+    .eq("player_id", originalStrikerId)
+    .maybeSingle();
+
+  if (!existingStats) {
+
+    await supabase.from("batting_stats").insert({
+      match_id: currentMatch.id,
+      player_id: originalStrikerId,
+      runs: extraRuns,
+      balls: 0, //  no ball doesn't count as ball
+      fours: extraRuns === 4 ? 1 : 0,
+      sixes: extraRuns === 6 ? 1 : 0
+    });
+
+  } else {
+
+    await supabase
+      .from("batting_stats")
+      .update({
+        runs: existingStats.runs + extraRuns,
+        fours: extraRuns === 4 ? existingStats.fours + 1 : existingStats.fours,
+        sixes: extraRuns === 6 ? existingStats.sixes + 1 : existingStats.sixes
+      })
+      .eq("id", existingStats.id);
+  }
+}
+
     // updating bowler stats
     const bowlerId = innings.bowler_id;
 
@@ -958,7 +1007,7 @@ if (!bowlerStats) {
     })
     .eq("id", bowlerStats.id);
 }
-}
+};
 
 // End Innings 
 async function endInnings() {
