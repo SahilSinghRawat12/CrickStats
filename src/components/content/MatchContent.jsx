@@ -86,7 +86,15 @@ const deleteMatch = async (matchId) => {
                             {teamB?.team_name}</span>
                              {/* <span className='text-md '>Winner : CSK</span> */}
                         
-                        <span className="text-blue-800 font-bold text-xl">{match.status}</span>
+                       <span
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          match.isfinished
+                            ? "bg-red-100 text-red-600"
+                            : "bg-green-100 text-green-600 animate-pulse"
+                        }`}
+                      >
+                        {match.isfinished ? "COMPLETED" : "LIVE"}
+                      </span>
 
                         <span className='text-sm  hover:text-blue-900 hover:font-semibold' onClick={ 
                             () => {

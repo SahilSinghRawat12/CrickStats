@@ -1490,6 +1490,23 @@ async function finishMatch() {
           >
             Finish Match
           </button>
+
+          <button
+            className="px-6 py-2 bg-green-700 text-white rounded-md
+                      hover:bg-green-800 transition-colors duration-200"
+
+            onClick={() => {
+              if (!currentMatch.isfinished) {
+                toast.error("Match not finished yet");
+                return;
+              }
+
+              navigate("/match-summary");
+
+            }}
+          >
+            Match Summary
+          </button>
         </div>
 
       </div>

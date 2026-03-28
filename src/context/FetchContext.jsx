@@ -80,6 +80,22 @@ export const FetchContextProvider = ({ children }) => {
     return data;
   };
 
+  const getMatchesWithInnings = async () => {
+  const { data, error } = await supabase
+    .from("matches")
+    .select(`
+      *,
+      match_innings!match_innings_match_id_fkey(*)
+    `);
+
+  if (error) {
+    console.log(error);
+    return [];
+  }
+
+  return data;
+};
+
   return (
     <FetchContext.Provider
       value={{
@@ -87,7 +103,8 @@ export const FetchContextProvider = ({ children }) => {
         getPlayers,
         getMatches,
         createMatch,
-        createPlayer
+        createPlayer,
+        getMatchesWithInnings
       }}
     >
     {children}

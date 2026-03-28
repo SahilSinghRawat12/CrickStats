@@ -1,13 +1,31 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
+import { FetchContext } from "../../context/FetchContext";
+
 
 const DashContent = () => {
 
-  const { state } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
+  const {getMatchesWithInnings , getTeams , getPlayers} = useContext(FetchContext);
   const navigate = useNavigate();
 
   const recentMatches = [...state.matches].slice(-5).reverse();
+
+  useEffect(()=>{
+    const loadData = async() =>{
+
+      const teams = await getTeams();
+      const players = await getPlayers();
+      const matches = await getMatchesWithInnings();
+
+      dispatch({ type: "SET_TEAMS" , payload: teams});
+      dispatch({ type: "SET_PLAYERS" , payload: players});
+      dispatch({ type: "SET_MATCHES" , payload: matches});
+    };
+
+    loadData();
+  }, []);
 
   return (
     <div className="flex flex-col gap-y-10 ml-10 w-[65%] ">
@@ -40,7 +58,7 @@ const DashContent = () => {
 
         <div className="bg-orange-500 text-white p-6 rounded-lg shadow">
           <p className="text-3xl font-bold">
-            {state.matches.filter(m => m.isFinished).length}
+            {state.matches.filter(m => m.isfinished).length}
           </p>
           <p>Completed Matches</p>
         </div>
@@ -100,20 +118,38 @@ const DashContent = () => {
           )}
 
 
-          {recentMatches.map(match => {
+          {
+          recentMatches.map(match => {
 
-            const teamA = state.teams.find(t => t.id === match.teamAId);
-            const teamB = state.teams.find(t => t.id === match.teamBId);
+            const teamA = state.teams.find(t => t.id === match.team_a_id);
+            const teamB = state.teams.find(t => t.id === match.team_b_id);
 
-            const firstInnings = match.innings[0];
-            const secondInnings = match.innings[1];
 
-            const score = firstInnings
-              ? `${firstInnings.runs}/${firstInnings.wickets}`
-              : "-";
+           const innings = match.match_innings || [];
+
+            // sort innings by created time  
+            innings.sort(
+              (a, b) => new Date(a.created_at) - new Date(b.created_at)
+            );
+
+            const firstInnings = innings[0];
+            const secondInnings = innings[1];
+
+            let score = "-";
+
+            if (firstInnings && !secondInnings) {
+              score = `${firstInnings.runs}/${firstInnings.wickets}`;
+            }
+
+            if (firstInnings && secondInnings) {
+              score = `${secondInnings.runs}/${secondInnings.wickets}`;
+            }
+
+            const balls = secondInnings?.balls ?? firstInnings?.balls ?? 0;
+            const overs = `${Math.floor(balls / 6)}.${balls % 6}`;
 
             const winner = state.teams.find(
-              t => t.id === match.winnerTeamId
+              t => t.id === match.winner_team_id
             );
 
             return (
@@ -123,16 +159,19 @@ const DashContent = () => {
                 className="flex gap-5 justify-around items-center p-4 border-b"
               >
 
-                <div className="w-full">
-                  {teamA?.teamName} vs {teamB?.teamName}
+                <div className="w-full capitalize">
+                  {teamA?.team_name} <div className="font-semibold mx-10">vs</div> {teamB?.team_name}
                 </div>
 
                 <div className="w-full">
-                  {score}
+                  {score} ({overs})
                 </div>
 
                 <div className="w-full">
-                  {winner?.teamName || "In Progress"}
+                  {
+                  match.isfinished
+                  ? winner?.team_name 
+                  : "LIVE" }
                 </div>
 
               </div>
@@ -160,7 +199,7 @@ const DashContent = () => {
           {state.teams.map(team => {
 
             const players = state.players.filter(
-              p => p.teamId === team.id
+              p => p.team_id === team.id
             );
 
             return (
