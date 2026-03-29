@@ -1,163 +1,228 @@
-import React, { useContext , useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { CiSquarePlus } from 'react-icons/ci'
-import { playersList } from '../../data/data'
 import { IoIosRemoveCircleOutline } from "react-icons/io";
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MdArrowBackIosNew } from 'react-icons/md';
 import { AppContext } from '../../context/AppContext';
-import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseCleint';
+import { uploadImage } from '../../utils/uploadImage';
+import toast from 'react-hot-toast';
 
- 
 
 const TeamDetails = () => {
 
-  const {teamId} = useParams();
-  
-  const {state , dispatch} = useContext(AppContext);
-
+  const { teamId } = useParams();
+  const { state, dispatch } = useContext(AppContext);
   const navigate = useNavigate();
+  const [avatars, setAvatars] = useState({});
 
-  const currentTeam = state.teams.find(
-    (team) => team.id == teamId
-  );
+  const currentTeam = state.teams.find((team) => team.id == teamId);
+  const teamPlayers = state.players.filter(player => player.team_id == teamId);
 
-  const teamPlayers = state.players.filter(
-    player => player.team_id == teamId
-  );
+  const fetchPlayers = async () => {
+    const { data, error } = await supabase
+      .from("players")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("created_at" , {ascending: true});
 
+    if (error) { console.log(error); return; }
+    
+    dispatch({ type: "SET_PLAYERS", payload: data });
+  };
 
-const fetchPlayers = async () => {
-  const {data , error} = await supabase
+  const fetchTeams = async () => {
+    const { data, error } = await supabase.from("teams").select("*");
+    if (error) { console.log(error); return; }
+    dispatch({ type: "SET_TEAMS", payload: data });
+  };
+
+  const deletePlayer = async (playerId) => {
+    const { error } = await supabase.from("players").delete().eq("id", playerId);
+    if (error) { console.log(error); return; }
+    dispatch({ type: "REMOVE_PLAYER", payload: playerId });
+  };
+
+ // handling images avatar
+  const handleAvatarChange = async (playerId, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // preview 
+    const reader = new FileReader();
+    reader.onload = (ev) =>
+       setAvatars(prev => ({
+         ...prev, 
+         [playerId]: ev.target.result
+         }));
+    reader.readAsDataURL(file);
+
+    // upload to supabase
+    const imageUrl = await uploadImage(file , "players");
+    if(!imageUrl) {
+      toast.error("Upload Failed");
+      return;
+    }
+
+    //save in DB
+    const {error} = await supabase
     .from("players")
-    .select("*")
-    .eq("team_id" , teamId);
+    .update({image_url: imageUrl})
+    .eq("id" , playerId);
 
     if(error)
     {
       console.log(error);
+      toast.error("Failed to save the image");
       return;
     }
 
-    dispatch({
-      type: "SET_PLAYERS",
-      payload: data
+   dispatch({
+  type: "SET_PLAYERS",
+  payload: state.players.map(p =>
+    p.id === playerId
+      ? { ...p, image_url: imageUrl }
+      : p
+      )
     });
-};
-
-
-const fetchTeams = async () => {
-
-  const { data, error } = await supabase
-    .from("teams")
-    .select("*");
-
-  if (error) {
-    console.log(error);
-    return;
-  }
-
-  dispatch({
-    type: "SET_TEAMS",
-    payload: data
-  });
-
-};
-
-
-const deletePlayer = async (playerId) => {
-   const {error} = await supabase
-   .from("players")
-   .delete()
-   .eq("id" , playerId);
-
-   if(error)
-    {
-      console.log(error);
-      return;
-    }
-
-    dispatch({
-      type:"REMOVE_PLAYER",
-      payload: playerId
-    });
-};
+  };
 
 
 
   useEffect(() => {
+    dispatch({ type: "SET_CURRENT_TEAM", payload: teamId });
+    fetchTeams();
+    fetchPlayers();
+  }, [teamId]);
 
-  dispatch({
-    type: "SET_CURRENT_TEAM",
-    payload: teamId
-  });
-  
-fetchTeams();
-fetchPlayers();
-
-}, [teamId]);
-
-  
   return (
-    <div className='w-full relative pl-16'>
-      <div className='left-5 top-5 absolute cursor-pointer' 
-                      onClick={()=> {navigate(-1) || navigate('/teams')} }>
-                       <MdArrowBackIosNew/>
-                      </div>
-          <div className='flex items-center w-[80%] mt-10 justify-between'>
-                <h1 className='text-3xl font-bold capitalize'>{currentTeam ? currentTeam.team_name : "No Team Selected"}</h1>
-             
-              
-                  <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'
-                   onClick={()=> navigate(`/teams/${state.currentTeamId}/add_player`)} >
-                         <CiSquarePlus color='white' size={23} />
-                         <span>ADD Player</span>
-                  </button>
-              
-           </div>
+    <div className='min-h-screen bg-gray-50 w-full'>
+      <div className='max-w-5xl mx-auto px-4 sm:px-6 py-8'>
 
+        {/* Back Button */}
+        <button
+          onClick={() => {
+            if(window.history.length > 1)
+               navigate(-1) 
+            else navigate('/teams')
+            }}
+          className='flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium mb-8 transition-colors'
+        >
+          <MdArrowBackIosNew size={13} />
+          Back to Teams
+        </button>
 
-           <div className='w-[80%] mt-12'>
-                   <h1 className='text-2xl mb-6'>Players</h1>
+        {/* Header */}
+        <div className='flex flex-wrap items-center justify-between gap-4 mb-8'>
+          <div>
+            <p className='text-xs text-gray-400 uppercase tracking-widest mb-1'>Team</p>
+            <h1 className='text-2xl sm:text-3xl font-bold text-gray-800 capitalize'>
+              {currentTeam ? currentTeam.team_name : "No Team Selected"}
+            </h1>
+          </div>
 
-                     <div className='ml-5 '>
-                          <div className="border border-gray-300 p-5 grid grid-cols-[2fr_2fr_40px_40px] items-center">
-                            <span className="text-lg font-bold">Player</span>
-                            <span className="text-lg text-center font-bold">Role</span>
-                            <span></span>
-                            <span></span>
-                          </div>
+          <button
+            onClick={() => navigate(`/teams/${state.currentTeamId}/add_player`)}
+            className='flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold py-2.5 px-5 rounded-xl shadow-md shadow-blue-200 transition-all text-sm'
+          >
+            <CiSquarePlus size={20} />
+            Add Player
+          </button>
+        </div>
 
-                          
-                          {teamPlayers.map((player) => (
-                                <div
-                                  key={player.id}
-                                  className="border border-gray-300 p-4 grid grid-cols-[2fr_2fr_40px_40px] items-center"
-                                >
-                                  {/* Player name */}
-                                  <span className='capitalize'>{player.player_name}</span>
+        {/* Stats Row */}
+        <div className='grid grid-cols-3 bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden'>
+          <div className='flex flex-col items-center py-4 border-r border-gray-100'>
+            <span className='text-2xl font-bold text-gray-800'>{teamPlayers.length}</span>
+            <span className='text-xs text-gray-400 uppercase tracking-wider mt-1'>Players</span>
+          </div>
+          <div className='flex flex-col items-center py-4 border-r border-gray-100'>
+            <span className='text-2xl font-bold text-gray-800'>{teamPlayers.filter(p => p.is_Captain).length}</span>
+            <span className='text-xs text-gray-400 uppercase tracking-wider mt-1'>Captains</span>
+          </div>
+          <div className='flex flex-col items-center py-4'>
+            <span className='text-2xl font-bold text-gray-800'>{Math.max(0, 11 - teamPlayers.length)}</span>
+            <span className='text-xs text-gray-400 uppercase tracking-wider mt-1'>Slots Left</span>
+          </div>
+        </div>
 
-                                  {/* Role */}
-                                  <span className="text-center">{player.player_role}</span>
+        {/* Players Card */}
+        <div className='bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden'>
 
-                                  {/* Captain column (fixed space) */}
-                                  <span className={`text-center font-bold ${player.is_Captain ? "visible" : "invisible"}`}>
-                                    C
-                                  </span>
+          {/* Table Header */}
+          <div className='grid grid-cols-[48px_1fr_100px_40px] sm:grid-cols-[56px_1fr_140px_44px] gap-3 items-center px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-100'>
+            <span />
+            <span className='text-xs font-semibold text-gray-400 uppercase tracking-wider'>Player</span>
+            <span className='text-xs font-semibold text-gray-400 uppercase tracking-wider text-center'>Role</span>
+            <span />
+          </div>
 
-                                  {/* Remove */}
-                                  <span onClick={() => deletePlayer(player.id)}>
-                                  <IoIosRemoveCircleOutline  size={18} className="cursor-pointer mx-auto" />
-                                  </span>
-                                
-                                </div>
-                              ))}
+          {/* Empty State */}
+          {teamPlayers.length === 0 && (
+            <div className='flex flex-col items-center justify-center py-16 text-gray-400'>
+              <span className='text-4xl mb-3'>🏃</span>
+              <p className='text-sm'>No players yet. Add your first player!</p>
+            </div>
+          )}
 
-                      </div>
-                </div>
+          {/* Player Rows */}
+          {teamPlayers.map((player) => (
+            <div
+              key={player.id}
+              className='grid grid-cols-[48px_1fr_100px_40px] sm:grid-cols-[56px_1fr_140px_44px] gap-3 items-center px-4 sm:px-6 py-3 border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-colors'
+            >
+              {/* Avatar */}
+              <label className='relative w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-gray-200 hover:border-blue-400 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0 transition-colors'>
+                {avatars[player.id] || player.image_url ? (
+                  <img src={avatars[player.id] || player.image_url} alt={player.player_name} className='w-full h-full object-cover' />
+                ) : (
+                  <span className='text-gray-400 font-semibold text-base pointer-events-none select-none '>
+                    {player.player_name?.[0]?.toUpperCase() || '?'}
+                  </span>
+                )}
+                <input
+                  type='file'
+                  accept='image/*'
+                  className='absolute inset-0 opacity-0 cursor-pointer w-full h-full'
+                  onChange={(e) => handleAvatarChange(player.id, e)}
+                />
+              </label>
 
+              {/* Name + Captain Badge */}
+              <div className='flex items-center gap-2 min-w-0'>
+                <span className='font-semibold text-gray-800 capitalize truncate text-sm sm:text-base'>
+                  {player.player_name}
+                </span>
+                {player.is_Captain && (
+                  <span className='flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-red-400 text-white text-[10px] font-bold flex items-center justify-center shadow-sm'>
+                    C
+                  </span>
+                )}
+              </div>
+
+              {/* Role */}
+              <div className='flex justify-center'>
+                <span className='inline-block bg-blue-50 text-blue-600 text-sm font-medium px-3 py-1 rounded-full'>
+                  {player.player_role || '—'}
+                </span>
+              </div>
+
+              {/* Delete */}
+              <div className='flex justify-center'>
+                <IoIosRemoveCircleOutline
+                  size={20}
+                  className='text-black hover:text-red-500 cursor-pointer transition-colors'
+                  onClick={() => deletePlayer(player.id)}
+                />
+              </div>
+
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default TeamDetails
+export default TeamDetails;

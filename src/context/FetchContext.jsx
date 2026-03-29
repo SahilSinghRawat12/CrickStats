@@ -23,7 +23,8 @@ export const FetchContextProvider = ({ children }) => {
   const getPlayers = async () => {
     const { data, error } = await supabase
       .from("players")
-      .select("*");
+      .select("*")
+      .order("created_at", {ascending: true});
 
     if (error) {
       console.error(error);
