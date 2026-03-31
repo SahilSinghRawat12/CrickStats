@@ -89,7 +89,7 @@ const AddingPlayers = () => {
   return (
     <div className='h-screen w-full'>
         <div className=' bg-[#f9fafb] h-full flex justify-center py-2'>
-            <form className='border relative border-black flex flex-col items-center pt-5 w-1/2 gap-y-10
+            <form className='border relative border-black flex flex-col items-center pt-10 w-1/2 gap-y-10
             bg-white'
             onSubmit={submitHandler} >
 
@@ -100,11 +100,11 @@ const AddingPlayers = () => {
                  <MdArrowBackIosNew/> 
                 </div>
 
-              <div className= ' w-32 h-32 rounded-full'>
+              {/* <div className= ' w-32 h-32 rounded-full'>
                 <img src={defaultImage} alt='profile'  className='rounded-full '/>
-              </div>
+              </div> */}
 
-              <div className='flex gap-5'>
+              <div className='flex gap-5 pt-14'>
                 <label>Player Name</label>
                  <input 
                  placeholder='Enter Player Name'

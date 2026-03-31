@@ -6,13 +6,18 @@ import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { supabase } from '../lib/supabaseCleint'
 import toast from 'react-hot-toast'
+import {uploadImage} from "../utils/uploadImage.js"
+
 
 
 
 const AddTeam = () => {
 
+
  const {state , dispatch} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
+ const [image, setImage] = useState(null);
+ const [preview, setPreview] = useState(null);
 //  const [value , setValue] = useState(1);
  const navigate = useNavigate();
  
@@ -20,9 +25,25 @@ const AddTeam = () => {
  {
     e.preventDefault();
 
+    let imageUrl = null;
+
+    if(image)
+    {
+      imageUrl = await uploadImage(image , "teams");
+
+      if(!imageUrl)
+      {
+        toast.error("Upload Failed");
+        return;
+      }
+    }
+
     const {data , error} = await supabase
           .from("teams")
-          .insert([{ team_name: teamName}])
+          .insert([{ 
+            team_name: teamName,
+            image_url: imageUrl
+          }])
           .select()
           .single();
           
@@ -45,7 +66,18 @@ const AddTeam = () => {
     setTeamName("");
     // setValue(1);
 
- }
+ };
+
+ const handleImageChange = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setImage(file);
+
+  const reader = new FileReader();
+  reader.onload = (ev) => setPreview(ev.target.result);
+  reader.readAsDataURL(file);
+};
 
  
   return (
@@ -63,9 +95,20 @@ const AddTeam = () => {
                                <MdArrowBackIosNew/>
               </div>
 
-              <div className= ' w-32 h-32 rounded-full'>
-                <img src={defaultImage} alt='profile'  className='rounded-full '/>
-              </div>
+              <label className="w-32 h-32 rounded-full overflow-hidden border-2 cursor-pointer flex items-center justify-center">
+
+                <img
+                  src={preview || defaultImage}
+                  className="w-full h-full object-cover rounded-full"
+                />
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"  
+                  onChange={handleImageChange}
+                />
+              </label>
 
               <div className='flex gap-5'>
                 <label>Team Name</label>

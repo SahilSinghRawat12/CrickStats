@@ -9,12 +9,14 @@ import { uploadImage } from '../../utils/uploadImage';
 import toast from 'react-hot-toast';
 
 
+
 const TeamDetails = () => {
 
   const { teamId } = useParams();
   const { state, dispatch } = useContext(AppContext);
   const navigate = useNavigate();
   const [avatars, setAvatars] = useState({});
+  const [selectedPlayer , setSelectedPlayer] = useState(null);
 
   const currentTeam = state.teams.find((team) => team.id == teamId);
   const teamPlayers = state.players.filter(player => player.team_id == teamId);
@@ -172,25 +174,31 @@ const TeamDetails = () => {
               className='grid grid-cols-[48px_1fr_100px_40px] sm:grid-cols-[56px_1fr_140px_44px] gap-3 items-center px-4 sm:px-6 py-3 border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-colors'
             >
               {/* Avatar */}
-              <label className='relative w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-gray-200 hover:border-blue-400 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer flex-shrink-0 transition-colors'>
-                {avatars[player.id] || player.image_url ? (
-                  <img src={avatars[player.id] || player.image_url} alt={player.player_name} className='w-full h-full object-cover' />
-                ) : (
-                  <span className='text-gray-400 font-semibold text-base pointer-events-none select-none '>
-                    {player.player_name?.[0]?.toUpperCase() || '?'}
-                  </span>
-                )}
+             <label className='relative w-12 h-12 rounded-full overflow-hidden cursor-pointer group'>
+
+                <img
+                  src={avatars[player.id] || player.image_url || "../../../public/defaultAvatar.png"}
+                  alt={player.player_name}
+                  className='w-full h-full object-cover'
+                />
+
+                {/* overlay */}
+                <div className='absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs'>
+                  {player.image_url ? "Edit" : "Add"}
+                </div>
+
                 <input
                   type='file'
                   accept='image/*'
-                  className='absolute inset-0 opacity-0 cursor-pointer w-full h-full'
+                  className='hidden'
                   onChange={(e) => handleAvatarChange(player.id, e)}
                 />
               </label>
 
               {/* Name + Captain Badge */}
               <div className='flex items-center gap-2 min-w-0'>
-                <span className='font-semibold text-gray-800 capitalize truncate text-sm sm:text-base'>
+                <span className='font-semibold text-gray-800 capitalize truncate text-sm sm:text-base cursor-pointer hover:underline'
+                onClick={() => setSelectedPlayer(player)}>
                   {player.player_name}
                 </span>
                 {player.is_Captain && (
@@ -221,7 +229,38 @@ const TeamDetails = () => {
         </div>
 
       </div>
+
+      {selectedPlayer && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+
+    <div className="bg-white p-5 rounded-xl relative">
+
+      <button
+        onClick={() => setSelectedPlayer(null)}
+        className="absolute top-1 right-2 text-black font-bold"
+      >
+        ✕
+      </button>
+
+      <img
+        src={selectedPlayer.image_url || "../../../public/defaultAvatar.png"}
+        className="w-60 h-60 object-cover rounded-lg"
+      />
+
+      <p className="text-center mt-3 font-semibold">
+        {selectedPlayer.player_name}
+      </p>
+
     </div>
+
+  </div>
+)}
+      
+    </div>
+
+    
+
+    
   );
 };
 
