@@ -8,6 +8,11 @@
 
   const LiveScore = () => {
 
+    const getCurrentUser = async () => {
+        const {data} = await supabase.auth.getUser();
+        return data.user;
+    }
+
     const [loading , setLoading] = useState(true);
     
     const [innings , setInnings] = useState(null);
@@ -47,10 +52,13 @@
   const fetchBattingStats = async () => {
   if (!currentMatch) return;
 
+   const user = await getCurrentUser();
+
   const { data } = await supabase
     .from("batting_stats")
     .select("*")
-    .eq("match_id", currentMatch.id);
+    .eq("match_id", currentMatch.id)
+    .eq("user_id" , user.id);
 
   setBattingStats(data || []);
 };
@@ -58,10 +66,12 @@
 const fetchBowlingStats = async () => {
   if (!currentMatch) return;
 
+   const user = await getCurrentUser();
   const { data } = await supabase
     .from("bowling_stats")
     .select("*")
-    .eq("match_id", currentMatch.id);
+    .eq("match_id", currentMatch.id)
+    .eq("user_id" , user.id);
 
   setBowlingStats(data || []);
 };
@@ -103,11 +113,14 @@ const fetchBowlingStats = async () => {
 // creatin first inings
   async function createInnings(match) {
 
+    const user = await getCurrentUser();
+    
     // Check existing innings
     const { data: existingInnings } = await supabase
       .from("match_innings")
       .select("*")
       .eq("match_id", match.id)
+      .eq("user_id", user.id)
       .eq("is_completed" , false);
 
     if (existingInnings.length > 0) {
@@ -136,10 +149,12 @@ const fetchBowlingStats = async () => {
         // second innings (reverse teams)
       
    // we take the team which completed the first innings and change the bowling team from that to batting
-        const {data: firstInnings} = await supabase
+   
+   const {data: firstInnings} = await supabase
       .from("match_innings")
       .select("*")
       .eq("match_id", match.id)
+      .eq("user_id" , user.id)
       .eq("is_completed", true)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -170,7 +185,8 @@ const fetchBowlingStats = async () => {
             batting_team_id: battingTeam,
             bowling_team_id: bowlingTeam,
             striker_id: battingPlayers[0]?.id,
-            non_striker_id: battingPlayers[1]?.id || null
+            non_striker_id: battingPlayers[1]?.id || null,
+            user_id: user.id
           })
           .select()
           .maybeSingle();
@@ -214,6 +230,8 @@ const fetchBowlingStats = async () => {
     setLastOutPlayer(outPlayerId);
 
         // storing wicket in ball
+      const user = await getCurrentUser();
+
       await supabase.from("balls").insert({
         match_id: currentMatch.id,
         innings_id: innings.id,
@@ -222,7 +240,8 @@ const fetchBowlingStats = async () => {
         over_number: Math.floor(innings.balls / 6),
         ball_number: (innings.balls % 6) + 1,
         runs: 0,
-        is_wicket: true
+        is_wicket: true,
+        user_id: user.id
       });
 
       // get out players from db
@@ -230,7 +249,8 @@ const fetchBowlingStats = async () => {
     .from("balls")
     .select("batsman_id")
     .eq("match_id", currentMatch.id)
-    .eq("is_wicket", true);
+    .eq("is_wicket", true)
+    .eq("user_id" , user.id);
 
     const dismissedIds = outData?.map( d => d.batsman_id) || [];
 
@@ -262,7 +282,8 @@ if (!nextBatsman) {
         balls: innings.balls + 1,
         is_completed: true
       })
-      .eq("id", innings.id);
+      .eq("id", innings.id)
+      .eq("user_id" , user.id);
 
     toast.error("All out!");
     return;
@@ -277,7 +298,8 @@ if (!nextBatsman) {
       striker_id: remainingPlayer,
       non_striker_id: null
     })
-    .eq("id", innings.id);
+    .eq("id", innings.id)
+    .eq("user_id" , user.id);
 
   toast("Last player batting alone");
   return;
@@ -301,7 +323,8 @@ if (!nextBatsman) {
       non_striker_id: newNonStriker,
       balls: innings.balls + 1
     })
-    .eq("id", innings.id);
+    .eq("id", innings.id)
+    .eq("user_id" , user.id);
 
   if (error) {
     console.log(error);
@@ -317,6 +340,7 @@ if (!nextBatsman) {
     .select("*")
     .eq("match_id", currentMatch.id)
     .eq("player_id", innings.bowler_id)
+    .eq("user_id" , user.id)
     .maybeSingle();
 
   if (!bowlerStats) {
@@ -325,7 +349,8 @@ if (!nextBatsman) {
       player_id: innings.bowler_id,
       runs: 0,
       balls: 1,
-      wickets: 1
+      wickets: 1,
+      user_id: user.id
     });
   } else {
     await supabase
@@ -334,7 +359,8 @@ if (!nextBatsman) {
         balls: bowlerStats.balls + 1,
         wickets: (bowlerStats.wickets || 0) + 1
       })
-      .eq("id", bowlerStats.id);
+      .eq("id", bowlerStats.id)
+      .eq("user_id" , user.id);
   }
 }
 
@@ -347,11 +373,13 @@ if (!nextBatsman) {
 
   async function loadInnings() {
 
+    const user = await getCurrentUser();
     // Try fetching
     const { data, error } = await supabase
       .from("match_innings")
       .select("*")
       .eq("match_id", currentMatch.id)
+      .eq("user_id" , user.id)
       .eq("is_completed", false)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -388,7 +416,13 @@ useEffect(() => {
   useEffect(() => {
   if (!currentMatch) return;
 
-  const channel = supabase
+  let channel = null;
+
+  const setUpRealtime = async () => {
+    const user = await getCurrentUser();
+    if(!user) return;
+
+     channel = supabase
     .channel(`live-score-${currentMatch.id}`)
     .on(
       "postgres_changes",
@@ -396,7 +430,7 @@ useEffect(() => {
         event: "*",
         schema: "public",
         table: "match_innings",
-        filter: `match_id=eq.${currentMatch.id}`
+        filter: `match_id=eq.${currentMatch.id}&user_id=eq.${user.id}`
       },
       (payload) => {
         setInnings(payload.new);
@@ -404,8 +438,15 @@ useEffect(() => {
     )
     .subscribe();
 
+  };
+
+  setUpRealtime();
+  
   return () => {
-    supabase.removeChannel(channel);
+    if(channel){
+       supabase.removeChannel(channel);
+    }
+   
   };
 }, [currentMatch]);
 
@@ -448,7 +489,10 @@ useEffect(() => {
     .subscribe();
 
   return () => {
-    supabase.removeChannel(channel);
+    if(channel)
+    {
+      supabase.removeChannel(channel);
+    }
   };
 }, [currentMatch]);
 
@@ -456,12 +500,17 @@ useEffect(() => {
  useEffect(() => {
   if (!currentMatch) return;
 
+  
   const fetchDismissed = async () => {
+  
+    const user = await getCurrentUser();
+
     const { data } = await supabase
       .from("balls")
       .select("batsman_id")
       .eq("match_id", currentMatch.id)
-      .eq("is_wicket", true);
+      .eq("is_wicket", true)
+      .eq("user_id" , user.id);
 
     const ids = data?.map(d => d.batsman_id) || [];
     setDismissedPlayers(ids);
@@ -570,12 +619,15 @@ useEffect(() => {
         return;
       }
 
+      const user = await getCurrentUser();
+      
     const { error } = await supabase
       .from("match_innings")
       .update({
         bowler_id: bowlerId
       })
-      .eq("id", innings.id);
+      .eq("id", innings.id)
+      .eq("user_id" , user.id);
 
     if (error) {
       console.log(error);
@@ -633,6 +685,8 @@ useEffect(() => {
     const ballNumber = (innings.balls % 6) + 1;
 
     // insert ball
+    const user = await getCurrentUser();
+
     const { error: ballError } = await supabase
       .from("balls")
       .insert({
@@ -642,7 +696,8 @@ useEffect(() => {
         bowler_id: innings.bowler_id,
         over_number: overNumber,
         ball_number: ballNumber,
-        runs: run
+        runs: run,
+        user_id: user.id
       });
 
     if (ballError) {
@@ -650,6 +705,8 @@ useEffect(() => {
       toast.error("Ball insert failed");
       return;
     }
+
+    
 
     // update innings
     let newStriker = innings.striker_id;
@@ -684,9 +741,10 @@ if ((innings.balls + 1) % 6 === 0) {
         balls: innings.balls + 1,
         striker_id: newStriker,
         non_striker_id: newNonStriker,
-        bowler_id: newBowler
+        bowler_id: newBowler,
       })
-      .eq("id", innings.id);
+      .eq("id", innings.id)
+      .eq("user_id" , user.id);
 
     if (inningsError) {
       console.log(inningsError);
@@ -720,14 +778,17 @@ if (currentMatch.currentInnings === 2) {
     }
 
     //check existing stats
+
     const {data: existingStats} = await supabase
     .from("batting_stats")
     .select("*")
     .eq("match_id", currentMatch.id)
     .eq("player_id", striker.id)
+    .eq("user_id" , user.id)
     .maybeSingle();
 
     //insert or update
+    
     if(!existingStats)
     {
 
@@ -737,7 +798,8 @@ if (currentMatch.currentInnings === 2) {
       runs: run,
       balls: 1,
       fours: run === 4 ? 1 : 0,
-      sixes: run === 6 ? 1 : 0
+      sixes: run === 6 ? 1 : 0,
+      user_id: user.id
     });
 
     }  else {
@@ -762,6 +824,7 @@ if (currentMatch.currentInnings === 2) {
   .select("*")
   .eq("match_id", currentMatch.id)
   .eq("player_id", bowlerId)
+  .eq("user_id" , user.id)
   .maybeSingle();
 
   if (!bowlerStats) {
@@ -770,7 +833,8 @@ if (currentMatch.currentInnings === 2) {
       match_id: currentMatch.id,
       player_id: bowlerId,
       runs: run,
-      balls: 1
+      balls: 1,
+      user_id: user.id
     });
 
   } else {
@@ -781,7 +845,8 @@ if (currentMatch.currentInnings === 2) {
       runs: bowlerStats.runs + run,
       balls: bowlerStats.balls + 1
     })
-    .eq("id", bowlerStats.id);
+    .eq("id", bowlerStats.id)
+    .eq("user_id" , user.id);
 
   }
 
@@ -816,6 +881,8 @@ if (innings.balls >= maxBalls) {
    const overNumber = Math.floor(innings.balls / 6);
   const ballNumber = (innings.balls % 6) + 1;
 
+  const user = await getCurrentUser();
+
   const { error: ballError } = await supabase
     .from("balls")
     .insert({
@@ -826,7 +893,8 @@ if (innings.balls >= maxBalls) {
       over_number: overNumber,
       ball_number: ballNumber,
       runs: 1,
-      extra_type: "wide"
+      extra_type: "wide",
+      user_id: user.id
     });
 
      if (ballError) {
@@ -841,7 +909,8 @@ if (innings.balls >= maxBalls) {
     .update({
       runs: innings.runs + 1
     })
-    .eq("id", innings.id);
+    .eq("id", innings.id)
+    .eq("user_id" , user.id);
 
 
     // updating bowler stats
@@ -852,13 +921,15 @@ const { data: bowlerStats } = await supabase
   .select("*")
   .eq("match_id", currentMatch.id)
   .eq("player_id", bowlerId)
+  .eq("user_id" , user.id)
   .maybeSingle();
 
 if (!bowlerStats) {
   await supabase.from("bowling_stats").insert({
     match_id: currentMatch.id,
     player_id: bowlerId,
-    runs: 1
+    runs: 1,
+    user_id: user.id
   });
 } else {
   await supabase
@@ -866,7 +937,8 @@ if (!bowlerStats) {
     .update({
       runs: bowlerStats.runs + 1
     })
-    .eq("id", bowlerStats.id);
+    .eq("id", bowlerStats.id)
+    .eq("user_id" , user.id);
 }
   }
   
@@ -898,6 +970,7 @@ if (innings.balls >= maxBalls) {
   const overNumber = Math.floor(innings.balls / 6);
   const ballNumber = (innings.balls % 6) + 1;
 
+  const user = await getCurrentUser();
   const { error: ballError } = await supabase
     .from("balls")
     .insert({
@@ -908,7 +981,8 @@ if (innings.balls >= maxBalls) {
       over_number: overNumber,
       ball_number: ballNumber,
       runs: totalRuns,
-      extra_type: "no_ball"
+      extra_type: "no_ball",
+      user_id: user.id
     });
 
   if (ballError) {
@@ -934,17 +1008,8 @@ if (innings.balls >= maxBalls) {
       striker_id: newStriker,
       non_striker_id: newNonStriker
     })
-    .eq("id", innings.id);
-
-    //updating batsman stats
-    await supabase
-    .from("match_innings")
-    .update({
-      runs: innings.runs + totalRuns,
-      striker_id: newStriker,
-      non_striker_id: newNonStriker
-    })
-    .eq("id", innings.id);
+    .eq("id", innings.id)
+    .eq("user_id" , user.id);
 
     // BATSMAN STATS UPDATE
 
@@ -957,6 +1022,7 @@ if (extraRuns > 0) {
     .select("*")
     .eq("match_id", currentMatch.id)
     .eq("player_id", originalStrikerId)
+    .eq("user_id" , user.id)
     .maybeSingle();
 
   if (!existingStats) {
@@ -967,7 +1033,8 @@ if (extraRuns > 0) {
       runs: extraRuns,
       balls: 0, //  no ball doesn't count as ball
       fours: extraRuns === 4 ? 1 : 0,
-      sixes: extraRuns === 6 ? 1 : 0
+      sixes: extraRuns === 6 ? 1 : 0,
+      user_id: user.id
     });
 
   } else {
@@ -979,7 +1046,8 @@ if (extraRuns > 0) {
         fours: extraRuns === 4 ? existingStats.fours + 1 : existingStats.fours,
         sixes: extraRuns === 6 ? existingStats.sixes + 1 : existingStats.sixes
       })
-      .eq("id", existingStats.id);
+      .eq("id", existingStats.id)
+      .eq("user_id" , user.id);
   }
 }
 
@@ -991,13 +1059,15 @@ const { data: bowlerStats } = await supabase
   .select("*")
   .eq("match_id", currentMatch.id)
   .eq("player_id", bowlerId)
+  .eq("user_id" , user.id)
   .maybeSingle();
 
 if (!bowlerStats) {
   await supabase.from("bowling_stats").insert({
     match_id: currentMatch.id,
     player_id: bowlerId,
-    runs: totalRuns
+    runs: totalRuns,
+    user_id: user.id
   });
 } else {
   await supabase
@@ -1005,7 +1075,8 @@ if (!bowlerStats) {
     .update({
       runs: bowlerStats.runs + totalRuns
     })
-    .eq("id", bowlerStats.id);
+    .eq("id", bowlerStats.id)
+    .eq("user_id" , user.id);
 }
 };
 
@@ -1013,13 +1084,15 @@ if (!bowlerStats) {
 async function endInnings() {
   if (!innings) return;
 
+  const user = await getCurrentUser();
   // mark current innings completed
   const { error } = await supabase
     .from("match_innings")
     .update({
       is_completed: true
     })
-    .eq("id", innings.id);
+    .eq("id", innings.id)
+    .eq("user_id" , user.id);
 
   if (error) {
     console.log(error);
@@ -1038,7 +1111,8 @@ async function endInnings() {
         currentInnings: 2,
         target: target
       })
-      .eq("id", currentMatch.id);
+      .eq("id", currentMatch.id)
+      .eq("user_id", user.id);
 
     toast.success("2nd innings started");
 
@@ -1099,6 +1173,7 @@ async function finishMatch() {
   }
 
   // update DB
+  const user = await getCurrentUser();
   const { error } = await supabase
     .from("matches")
     .update({
@@ -1106,7 +1181,8 @@ async function finishMatch() {
       winner_team_id: winnerTeamId,
       result_text: resultText
     })
-    .eq("id", currentMatch.id);
+    .eq("id", currentMatch.id)
+    .eq("user_id" , user.id);
 
   if (error) {
     console.log(error);

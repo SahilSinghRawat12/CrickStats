@@ -7,9 +7,12 @@ export const FetchContextProvider = ({ children }) => {
 
     // GET TEAMS 
      const getTeams = async () => {
+      const {data: userData} = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("teams")
       .select("*")
+      .eq("user_id", userData.user.id)
       .order("created_at" , {ascending: true});
 
     if (error) {
@@ -22,9 +25,12 @@ export const FetchContextProvider = ({ children }) => {
 
    // GET PLAYERS
   const getPlayers = async () => {
+    const {data: userData} = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("players")
       .select("*")
+      .eq("user_id", userData.user.id)
       .order("created_at", {ascending: true});
 
     if (error) {
@@ -37,9 +43,13 @@ export const FetchContextProvider = ({ children }) => {
 
    // GET MATCHES
   const getMatches = async () => {
+    const {data: userData} = await supabase.auth.getUser();
+      
     const { data, error } = await supabase
       .from("matches")
-      .select("*");
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .order("created_at" , {ascending: true});
 
     if (error) {
       console.error(error);
@@ -52,9 +62,14 @@ export const FetchContextProvider = ({ children }) => {
 
     // CREATE MATCH
   const createMatch = async (matchData) => {
+    const {data: userData} = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("matches")
-      .insert([matchData])
+      .insert([{
+        ...matchData,
+       user_id: userData.user.id
+      }])
       .select()
       .single();
 
@@ -68,9 +83,13 @@ export const FetchContextProvider = ({ children }) => {
 
    // CREATE PLAYER
   const createPlayer = async (playerData) => {
+     const {data: userData} = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("players")
-      .insert([playerData])
+      .insert([{
+        ...playerData,
+      user_id: userData.user.id
+    }])
       .select()
       .single();
 
@@ -83,12 +102,15 @@ export const FetchContextProvider = ({ children }) => {
   };
 
   const getMatchesWithInnings = async () => {
+     const {data: userData} = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("matches")
     .select(`
       *,
       match_innings!match_innings_match_id_fkey(*)
-    `);
+    `)
+    .eq("user_id" , userData.user.id);
 
   if (error) {
     console.log(error);

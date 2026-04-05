@@ -83,12 +83,15 @@ const AddMatch = () => {
       return;
      }
 
+     const {data: userData} = await supabase.auth.getUser();
+
    const {data , error} = await supabase
    .from("matches")
    .insert([
     {
         team_a_id: teamA,
         team_b_id: teamB,
+        user_id: userData.user.id,
         overs: formData.overs,
         match_date: formData.date,
         toss_winner_id: formData.tossWinner,

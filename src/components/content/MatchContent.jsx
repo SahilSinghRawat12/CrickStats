@@ -40,10 +40,14 @@ useEffect(()=>{
 
 
 const deleteMatch = async (matchId) => {
+
+  const {data: userData} = await supabase.auth.getUser();
+
   const { error } = await supabase
     .from("matches")
     .delete()
-    .eq("id", matchId);
+    .eq("id", matchId)
+    .eq("user_id" , userData.user.id);
 
   if (error) {
     console.log(error);

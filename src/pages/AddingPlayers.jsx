@@ -29,7 +29,9 @@ const AddingPlayers = () => {
         if (!role) {
           alert("Please select a player role");
           return;
-        }        
+        }       
+        
+        const {data: userData} = await supabase.auth.getUser();
 
         const {data , error} = await supabase
         .from("players")
@@ -38,7 +40,8 @@ const AddingPlayers = () => {
             player_name: name,
             player_role: role,
             is_captain: captain,
-            team_id: teamId
+            team_id: teamId,
+            user_id: userData.user.id 
           }
         ])
         .select()   // selects the inserted row
@@ -63,11 +66,18 @@ const AddingPlayers = () => {
        setIsActiveIndex(null);
     }
 
+     
+        
     const fetchPlayers = async () => {
+
+      const {data: userData} = await supabase.auth.getUser();
+
       const {data , error} = await supabase
       .from("players")
       .select("*")
-      .eq("team_id" , teamId);
+      .eq("team_id" , teamId)
+       .eq("user_id" , userData.user.id)
+       .order("created_at" , { ascending: true });
 
       if(error)
       {

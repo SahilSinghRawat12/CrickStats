@@ -2,6 +2,8 @@ import React, { useContext, useEffect } from "react";
 import { AppContext } from "../../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { FetchContext } from "../../context/FetchContext";
+import {signOut} from "../../utils/auth"
+import toast from "react-hot-toast";
 
 
 const DashContent = () => {
@@ -11,6 +13,19 @@ const DashContent = () => {
   const navigate = useNavigate();
 
   const recentMatches = [...state.matches].slice(-5).reverse();
+
+  const handleLogout = async () => {
+  const { error } = await signOut();
+
+  if (error) {
+    toast.error("Logout failed");
+    return;
+  }
+
+  toast.success("Logged out");
+
+  navigate("/login");
+  };
 
   useEffect(()=>{
     const loadData = async() =>{
@@ -28,12 +43,14 @@ const DashContent = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-y-10 ml-10 w-[65%] ">
+    <div className="flex flex-col pt-5 gap-y-10 ml-10 w-[90%] ">
 
       {/* Dashboard Title */}
 
-      <div>
+      <div className="flex justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <button className="bg-red-500 px-4 py-2 text-white rounded-md hover:bg-red-700 hover:font-semibold"
+        onClick={handleLogout}>Log Out</button>
       </div>
 
 

@@ -15,6 +15,7 @@ import AddTeam from './pages/AddTeam'
 import AddMatch from './pages/AddMatch'
 import LiveScore from './pages/LiveScore'
 import MatchSummary from './pages/MatchSummary'
+import PrivateRoute from './context/PrivateRoute'
 
 function App() {
   
@@ -26,17 +27,18 @@ function App() {
            <Route path='/' element={<Home/>} />
            <Route path='/login' element={<Login/>} />
            <Route path='/register' element={<Register/>} />
-           <Route path='/dashboard' element={<Dashboard/>} />
-           <Route path='/teams' element={<Teams/>} />
-           <Route path='/teams/addteam' element={<AddTeam/>} />
-           <Route path='/teams/:teamId' element={<TeamDetailsPage/>} />
-           <Route path='/teams/:teamId/add_player' element={<AddingPlayers/>} />
-           <Route path='/matches' element={<Matches/>} />
-           <Route path='/matches/create_match' element={<AddMatch/>} />
-           <Route path='/matches/details' element={<ScoreCard/>} />
-           <Route path='/players' element={<Players/>} />
-           <Route path='/matches/live_match' element={<LiveScore/>} />
-           <Route path="/match-summary" element={<MatchSummary />} />
+           
+           <Route path='/dashboard' element={<PrivateRoute><Dashboard/></PrivateRoute>} />
+           <Route path='/teams' element={<PrivateRoute><Teams/></PrivateRoute>} />
+           <Route path='/teams/addteam' element={<PrivateRoute><AddTeam/></PrivateRoute>} />
+           <Route path='/teams/:teamId' element={<PrivateRoute><TeamDetailsPage/></PrivateRoute>} />
+           <Route path='/teams/:teamId/add_player' element={<PrivateRoute><AddingPlayers/></PrivateRoute>} />
+           <Route path='/matches' element={<PrivateRoute><Matches/></PrivateRoute>} />
+           <Route path='/matches/create_match' element={<PrivateRoute><AddMatch/></PrivateRoute>} />
+           <Route path='/matches/details' element={<PrivateRoute><ScoreCard/></PrivateRoute>} />
+           <Route path='/players' element={<PrivateRoute><Players/></PrivateRoute>} />
+           <Route path='/matches/live_match' element={<PrivateRoute><LiveScore/></PrivateRoute>} />
+           <Route path="/match-summary" element={<PrivateRoute><MatchSummary /></PrivateRoute>} />
 
         </Routes>
     </div>

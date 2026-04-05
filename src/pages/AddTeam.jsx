@@ -13,7 +13,6 @@ import {uploadImage} from "../utils/uploadImage.js"
 
 const AddTeam = () => {
 
-
  const {state , dispatch} = useContext(AppContext);
  const [teamName , setTeamName] = useState("");
  const [image, setImage] = useState(null);
@@ -38,11 +37,14 @@ const AddTeam = () => {
       }
     }
 
+    const {data: userData} = await supabase.auth.getUser();
+
     const {data , error} = await supabase
           .from("teams")
           .insert([{ 
             team_name: teamName,
-            image_url: imageUrl
+            image_url: imageUrl,
+            user_id: userData.user.id
           }])
           .select()
           .single();

@@ -22,6 +22,8 @@ const TeamContent = () => {
 
   const fetchTeams = async ()=>{
 
+    const {data: userData} = await supabase.auth.getUser();
+     
     const {data , error} = await supabase
         .from("teams")
         .select(`
@@ -30,7 +32,9 @@ const TeamContent = () => {
           image_url,  
           players(count)
          `)
+         .eq("user_id" , userData.user.id)
          .order("created_at" , {ascending: true});
+
 
         if(error)
         {
@@ -62,10 +66,13 @@ const TeamContent = () => {
   // }
 
   const deleteTeam = async (teamId) => {
+    const {data: userData} = await supabase.auth.getUser();
+
       const {error} = await supabase
       .from("teams")
       .delete()
-      .eq("id" , teamId);
+      .eq("id" , teamId)
+      .eq("user_id" , userData.user.id);
 
       if(error)
       {

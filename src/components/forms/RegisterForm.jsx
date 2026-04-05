@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import React, { useState} from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
 import image from "../../assests/cricketImage.jpg"
 import toast from 'react-hot-toast'
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
-
+import {signUp} from "../../utils/auth"
 
 const RegisterForm = () => {
+
+  const navigate = useNavigate();
 
     const [formData , setFormData] = useState(
         {
@@ -32,7 +34,7 @@ const RegisterForm = () => {
      
     
      
-    function submitHandler(event)
+   async function submitHandler(event)
     {
         event.preventDefault();
 
@@ -41,6 +43,20 @@ const RegisterForm = () => {
           toast.error("Password does not matched");
           return;
         }
+
+        const {error} = await signUp(
+          formData.email,
+          formData.password
+        );
+
+        if(error){
+          toast.error(error.message);
+          return;
+        }
+
+        toast.success("Account created");
+
+        navigate("/login");
     }
 
   return (
@@ -145,22 +161,7 @@ const RegisterForm = () => {
 
               </label>
         
-              {/* agree to terms and condition */}
-           
-            <div className='flex gap-x-5'>
-                  <input
-                required 
-                type='checkbox'
-                onChange={changeHandler}
-                name='checkbox'
-                id='termsCondition'
-                checked = {formData.checkbox}
-              />
-              <label htmlFor='termsCondition'>
-                <p className='text-sm'>I agree to the <span className='border-b border-[#6e55b8] font-semibold text-[#6e55b8]'>Terms&Conditions</span></p>
-              </label>
-            </div>
-
+              
               <button className='bg-[#6e55b8] w-[465px] py-3 rounded-lg'>
                  Create Account 
               </button>

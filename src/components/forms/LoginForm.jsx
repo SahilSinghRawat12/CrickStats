@@ -1,21 +1,24 @@
 import React, { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink , useNavigate } from 'react-router-dom'
 import image from "../../assests/crickMatch.jpg"
 import toast from 'react-hot-toast'
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
 import { IoPersonSharp } from "react-icons/io5";
-
+import {signIn} from "../../utils/auth"
 
 
 const LoginForm = () => {
 
- 
+ const navigate = useNavigate();
+
     const [formData , setFormData] = useState(
         {
             email : "", password : "",  
         }
     )
+
+    const [loading , setLoading] = useState(false);
 
     const [showPassword , setShowPassword] = useState(false);
      
@@ -33,9 +36,27 @@ const LoginForm = () => {
      
     
      
-    function submitHandler(event)
+   async function submitHandler(event)
     {
         event.preventDefault();
+
+        setLoading(true);
+    
+        const { error } = await signIn(
+            formData.email,
+            formData.password
+        );
+
+        setLoading(false);
+
+        if (error) {
+            toast.error(error.message);
+            return;
+        }
+
+        toast.success("Login successful");
+
+        navigate("/dashboard"); // redirect after login
     }
 
   return (
@@ -91,11 +112,11 @@ const LoginForm = () => {
 
 
               <button className='bg-[#6e55b8] text-center w-[465px] py-3 rounded-lg'>
-                 Login
+                 {loading ? "Loggin In..." : "LogIn" }
               </button>
               
               <div className='flex justify-center w-3/4 '>
-                 <p className='text-white hover:text-gray-300 cursor-pointer '>Forgot Password?</p>
+                <NavLink to="/register"> <p className='text-white hover:text-gray-300 cursor-pointer ' >Create Account</p></NavLink>
               </div>
 
             </form>
