@@ -229,6 +229,15 @@ const fetchBowlingStats = async () => {
 
     setLastOutPlayer(outPlayerId);
 
+    // ===== 🔥 INSTANT WICKET UI =====
+setDismissedPlayers(prev => [...prev, outPlayerId]);
+
+setInnings(prev => ({
+  ...prev,
+  wickets: (prev.wickets || 0) + 1,
+  balls: (prev.balls || 0) + 1
+}));
+
         // storing wicket in ball
       const user = await getCurrentUser();
 
@@ -455,6 +464,13 @@ useEffect(() => {
 useEffect(() => {
   if (!currentMatch) return;
 
+  let channel = null;
+
+  const batBowlRealTime = async () => {
+    const user = await getCurrentUser();
+
+    if(!user) return;
+
   const channel = supabase
     .channel(`stats-${currentMatch.id}`)
 
@@ -465,7 +481,7 @@ useEffect(() => {
         event: "*",
         schema: "public",
         table: "batting_stats",
-        filter: `match_id=eq.${currentMatch.id}`
+        filter: `match_id=eq.${currentMatch.id}&user_id=eq.${user.id}`
       },
       () => {
         fetchBattingStats();
@@ -479,7 +495,7 @@ useEffect(() => {
         event: "*",
         schema: "public",
         table: "bowling_stats",
-        filter: `match_id=eq.${currentMatch.id}`
+        filter: `match_id=eq.${currentMatch.id}&user_id=eq.${user.id}`
       },
       () => {
         fetchBowlingStats();
@@ -487,6 +503,9 @@ useEffect(() => {
     )
 
     .subscribe();
+  };
+
+  batBowlRealTime();
 
   return () => {
     if(channel)
@@ -706,11 +725,43 @@ useEffect(() => {
       return;
     }
 
-    
+// ===== 🔥 OPTIMISTIC UI UPDATE START =====
 
-    // update innings
-    let newStriker = innings.striker_id;
-  let newNonStriker = innings.non_striker_id;
+const nextBalls = (innings.balls || 0) + 1;
+const nextRuns = (innings.runs || 0) + run;
+
+let newStriker = innings.striker_id;
+let newNonStriker = innings.non_striker_id;
+
+// strike rotation
+if ((run === 1 || run === 3) && innings.non_striker_id) {
+  newStriker = innings.non_striker_id;
+  newNonStriker = innings.striker_id;
+}
+
+// over complete
+let newBowler = innings.bowler_id;
+
+if (nextBalls % 6 === 0) {
+  const temp = newStriker;
+  newStriker = newNonStriker;
+  newNonStriker = temp;
+  newBowler = null;
+}
+
+// 🔥 instant UI update
+setInnings(prev => ({
+  ...prev,
+  runs: nextRuns,
+  balls: nextBalls,
+  striker_id: newStriker,
+  non_striker_id: newNonStriker,
+  bowler_id: newBowler
+}));
+
+// ===== 🔥 OPTIMISTIC UI UPDATE END =====    
+
+ 
 
   // change strike for 1 or 3 runs
   if ((run === 1 || run === 3) && innings.non_striker_id) {
@@ -719,9 +770,9 @@ useEffect(() => {
   }
 
   // end of over strike change
-let newBowler = innings.bowler_id;
+ 
 
-if ((innings.balls + 1) % 6 === 0) {
+if (nextBalls % 6 === 0) {
   
   // strike change
   const temp = newStriker;
@@ -737,8 +788,8 @@ if ((innings.balls + 1) % 6 === 0) {
     const { error: inningsError } = await supabase
       .from("match_innings")
       .update({
-        runs: innings.runs + run,
-        balls: innings.balls + 1,
+        runs:nextRuns,
+        balls: nextBalls,
         striker_id: newStriker,
         non_striker_id: newNonStriker,
         bowler_id: newBowler,
@@ -771,6 +822,36 @@ if (currentMatch.currentInnings === 2) {
     const striker = battingTeamPlayers.find(
     p => String(p.id) === String(originalStrikerId)
     );
+
+    // ===== 🔥 INSTANT BATTING UI =====
+setBattingStats(prev => {
+  const existing = prev.find(s => s.player_id === originalStrikerId);
+
+  if (!existing) {
+    return [
+      ...prev,
+      {
+        player_id: originalStrikerId,
+        runs: run,
+        balls: 1,
+        fours: run === 4 ? 1 : 0,
+        sixes: run === 6 ? 1 : 0
+      }
+    ];
+  }
+
+  return prev.map(s =>
+    s.player_id === originalStrikerId
+      ? {
+          ...s,
+          runs: s.runs + run,
+          balls: s.balls + 1,
+          fours: run === 4 ? s.fours + 1 : s.fours,
+          sixes: run === 6 ? s.sixes + 1 : s.sixes
+        }
+      : s
+  );
+});
 
     if (!striker) {
   toast.error("Striker not ready yet");

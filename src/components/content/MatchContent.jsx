@@ -77,7 +77,24 @@ const deleteMatch = async (matchId) => {
            <div className='mt-16 grid grid-cols-3 w-[80%] gap-x-10  '>      
                  
                {
-                  state.matches.map( (match) =>  {
+               state.matches.length === 0 ? (
+
+                // 🔥 EMPTY STATE
+                <div className="col-span-3 flex flex-col items-center justify-center py-20 gap-4 text-gray-500">
+
+                  <h2 className="text-xl font-semibold">No Matches Found</h2>
+
+                  <button
+                    onClick={() => navigate('/matches/create_match')}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-md"
+                  >
+                    ➕ Add Your First Match
+                  </button>
+
+                </div>
+
+                  ):
+                 ( state.matches.map( (match) =>  {
                     
                     const teamA = state.teams.find( (team) => team.id === match.team_a_id);
                     const teamB = state.teams.find( (team) => team.id === match.team_b_id);
@@ -121,7 +138,7 @@ const deleteMatch = async (matchId) => {
                          </div>
                       )
                        
-                        })
+                        }))
                }
                
            </div>

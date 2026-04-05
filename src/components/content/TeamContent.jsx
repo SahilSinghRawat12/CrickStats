@@ -157,7 +157,24 @@ const TeamContent = () => {
         <div className='mt-12 flex flex-col w-[80%]   gap-y-5 '>
  
           {
-            state.teams.map( (team)=> {
+                state.teams.length === 0 ? (
+
+          // 🔥 EMPTY STATE
+          <div className="col-span-3 flex flex-col items-center justify-center py-20 gap-4 text-gray-500">
+
+            <h2 className="text-xl font-semibold">No Teams Created</h2>
+
+            <button
+              onClick={() => navigate('/teams/add_team')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-md"
+            >
+              ➕ Create Your First Team
+            </button>
+
+            </div>
+             ) :
+
+            (state.teams.map( (team)=> {
 
               // const totalPlayers = state.players.filter(
               //   player => player.team_id == team.id
@@ -212,7 +229,7 @@ const TeamContent = () => {
                 </div>
             </div>
               )   
-          })  
+          }))  
           }
 
         </div>
