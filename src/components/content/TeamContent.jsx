@@ -111,10 +111,12 @@ const TeamContent = () => {
   }
 
   // update DB
+  const {data: userData} = await supabase.auth.getUser();
   const { data , error } = await supabase
     .from("teams")
     .update({ image_url: imageUrl })
     .eq("id", teamId)
+    .eq("user_id" , userData.user.id)
     .select()
     .maybeSingle();
 
@@ -165,7 +167,7 @@ const TeamContent = () => {
             <h2 className="text-xl font-semibold">No Teams Created</h2>
 
             <button
-              onClick={() => navigate('/teams/add_team')}
+              onClick={() => navigate('/teams/addteam')}
               className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-md"
             >
               ➕ Create Your First Team

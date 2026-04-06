@@ -22,10 +22,12 @@ const TeamDetails = () => {
   const teamPlayers = state.players.filter(player => player.team_id == teamId);
 
   const fetchPlayers = async () => {
+    const {data: userData} = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("players")
       .select("*")
       .eq("team_id", teamId)
+      .eq("user_id" , userData.user.id)
       .order("created_at" , {ascending: true});
 
     if (error) { console.log(error); return; }
@@ -34,13 +36,24 @@ const TeamDetails = () => {
   };
 
   const fetchTeams = async () => {
-    const { data, error } = await supabase.from("teams").select("*");
+    const {data: userData} = await supabase.auth.getUser();
+    const { data, error } = await supabase
+    .from("teams")
+    .select("*")
+    .eq("user_id" , userData.user.id);
+
     if (error) { console.log(error); return; }
     dispatch({ type: "SET_TEAMS", payload: data });
   };
 
   const deletePlayer = async (playerId) => {
-    const { error } = await supabase.from("players").delete().eq("id", playerId);
+    const {data: userData} = await supabase.auth.getUser();
+    const { error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", playerId)
+    .eq("user_id" , userData.user.id);
+    
     if (error) { console.log(error); return; }
     dispatch({ type: "REMOVE_PLAYER", payload: playerId });
   };
@@ -67,10 +80,13 @@ const TeamDetails = () => {
     }
 
     //save in DB
+    const {data: userData} = await supabase.auth.getUser();
+
     const {error} = await supabase
     .from("players")
     .update({image_url: imageUrl})
-    .eq("id" , playerId);
+    .eq("id" , playerId)
+    .eq("user_id" , userData.user.id);
 
     if(error)
     {

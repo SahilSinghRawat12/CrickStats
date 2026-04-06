@@ -57,11 +57,13 @@ const MatchSummary = () => {
     if (!match) return;
     
     const loadData = async () => {
+      const {data: userData} = await supabase.auth.getUser();
 
       const { data: inningsData } = await supabase
         .from("match_innings")
         .select("*")
         .eq("match_id", match.id)
+        .eq("user_id" , userData.user.id)
         .order("created_at", { ascending: true });
 
       setInnings(inningsData || []);
@@ -69,14 +71,16 @@ const MatchSummary = () => {
       const { data: batStats } = await supabase
         .from("batting_stats")
         .select("*")
-        .eq("match_id", match.id);
-
-      setBattingStats(batStats || []);
-
-      const { data: bowlStats } = await supabase
+        .eq("match_id", match.id)
+        .eq("user_id" , userData.user.id);
+        
+        setBattingStats(batStats || []);
+        
+        const { data: bowlStats } = await supabase
         .from("bowling_stats")
         .select("*")
-        .eq("match_id", match.id);
+        .eq("match_id", match.id)
+        .eq("user_id" , userData.user.id);
 
       setBowlingStats(bowlStats || []);
     };
