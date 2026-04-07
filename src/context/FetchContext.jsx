@@ -104,6 +104,12 @@ export const FetchContextProvider = ({ children }) => {
   const getMatchesWithInnings = async () => {
      const {data: userData} = await supabase.auth.getUser();
 
+     if(!userData?.user)
+     {
+      console.log("No user found");
+      return [];
+     }
+
   const { data, error } = await supabase
     .from("matches")
     .select(`
