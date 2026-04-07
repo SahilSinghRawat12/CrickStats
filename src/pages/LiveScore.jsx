@@ -1303,7 +1303,7 @@ async function finishMatch() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold capitalize">
+          <h1 className="text-2xl font-bold capitalize text-center mb-5">
             {teamA?.team_name}
             <div className="mx-24">vs</div>
             {teamB?.team_name}

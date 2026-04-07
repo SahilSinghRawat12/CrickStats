@@ -61,90 +61,106 @@ const deleteMatch = async (matchId) => {
   dispatch({ type: "SET_MATCHES", payload: matches });
 };
  
+return (
+  <div className='w-full px-4 sm:px-6 md:pl-16'>
 
-  return (
-    <div className='w-full pl-16 '>
-           <div className='flex items-center w-[80%] mt-10 justify-between'>
-               <h1 className='text-3xl font-bold'>Matches</h1>
-   
-               <button className='flex cursor-pointer  bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2'
-               onClick={()=> navigate('/matches/create_match')}>
-                   <CiSquarePlus color='white' size={23} />
-                    <span>ADD Match</span>
-               </button>
-           </div>
-   
-           <div className='mt-16 grid grid-cols-3 w-[80%] gap-x-10  '>      
-                 
-               {
-               state.matches.length === 0 ? (
+    {/* HEADER */}
+    <div className='flex flex-col sm:flex-row items-start sm:items-center w-full md:w-[80%] mt-24 lg:mt-10 justify-between gap-3 '>
+      
+      <h1 className='text-2xl md:text-3xl font-bold'>Matches</h1>
 
-                // 🔥 EMPTY STATE
-                <div className="col-span-3 flex flex-col items-center justify-center py-20 gap-4 text-gray-500">
+      <button 
+        className='flex cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md items-center gap-x-2 w-full sm:w-auto justify-center'
+        onClick={()=> navigate('/matches/create_match')}
+      >
+        <CiSquarePlus color='white' size={23} />
+        <span>ADD Match</span>
+      </button>
+    </div>
 
-                  <h2 className="text-xl font-semibold">No Matches Found</h2>
+    {/* MATCHES */}
+    <div className='mt-8 md:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full md:w-[80%] gap-4 md:gap-x-10'>
 
-                  <button
-                    onClick={() => navigate('/matches/create_match')}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-md"
-                  >
-                    ➕ Add Your First Match
-                  </button>
+      {
+        state.matches.length === 0 ? (
 
-                </div>
+          // 🔥 EMPTY STATE
+          <div className="col-span-full flex flex-col items-center justify-center py-16 gap-4 text-gray-500 text-center">
 
-                  ):
-                 ( state.matches.map( (match) =>  {
-                    
-                    const teamA = state.teams.find( (team) => team.id === match.team_a_id);
-                    const teamB = state.teams.find( (team) => team.id === match.team_b_id);
-                    
-                    return (
-                        <div key={match.id} className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-10 gap-y-3 shadow-md cursor-pointer'>  
-                         <span key={match.id} className='text-2xl text-center font-medium'>
-                            {teamA?.team_name} 
-                            <div>vs</div> 
-                            {teamB?.team_name}</span>
-                             {/* <span className='text-md '>Winner : CSK</span> */}
-                        
-                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          match.isfinished
-                            ? "bg-red-100 text-red-600"
-                            : "bg-green-100 text-green-600 animate-pulse"
-                        }`}
-                      >
-                        {match.isfinished ? "COMPLETED" : "LIVE"}
-                      </span>
+            <h2 className="text-lg md:text-xl font-semibold">No Matches Found</h2>
 
-                        <span className='text-sm  hover:text-blue-900 hover:font-semibold' onClick={ 
-                            () => {
-                                localStorage.setItem("currentMatchId", match.id);
-                                dispatch({
-                                    type: 'SET_CURRENT_MATCH',
-                                    payload: match.id
-                                });
+            <button
+              onClick={() => navigate('/matches/create_match')}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-md"
+            >
+              ➕ Add Your First Match
+            </button>
 
-                                navigate('/matches/live_match');
-                            }
-                        }>View Details</span>
-                        
-                        <button
-                        onClick={() => deleteMatch(match.id)}
-                        className="mt-2 px-3 py-1 bg-red-500 text-white rounded
-                         hover:bg-red-600 " >
-                        Delete
-                        </button>
-                         </div>
-                      )
-                       
-                        }))
-               }
-               
-           </div>
-           
-       </div>
-  )
+          </div>
+
+        ) :
+
+        ( state.matches.map( (match) =>  {
+          
+          const teamA = state.teams.find( (team) => team.id === match.team_a_id);
+          const teamB = state.teams.find( (team) => team.id === match.team_b_id);
+          
+          return (
+            <div 
+              key={match.id} 
+              className='flex flex-col border border-gray-300 justify-center capitalize items-center rounded-md bg-white py-6 md:py-10 px-3 gap-y-3 shadow-md cursor-pointer max-w-[320px] w-full mx-auto'
+            >  
+
+              <span className='text-lg md:text-2xl text-center font-medium'>
+                {teamA?.team_name} 
+                <div>vs</div> 
+                {teamB?.team_name}
+              </span>
+
+              {/* <span className='text-md '>Winner : CSK</span> */}
+
+              <span
+                className={`px-3 py-1 rounded-full text-xs md:text-sm font-semibold ${
+                  match.isfinished
+                    ? "bg-red-100 text-red-600"
+                    : "bg-green-100 text-green-600 animate-pulse"
+                }`}
+              >
+                {match.isfinished ? "COMPLETED" : "LIVE"}
+              </span>
+
+              <span 
+                className='text-sm hover:text-blue-900 hover:font-semibold text-center'
+                onClick={ 
+                  () => {
+                    localStorage.setItem("currentMatchId", match.id);
+                    dispatch({
+                      type: 'SET_CURRENT_MATCH',
+                      payload: match.id
+                    });
+
+                    navigate('/matches/live_match');
+                  }
+                }
+              >
+                View Details
+              </span>
+
+              <button
+                onClick={() => deleteMatch(match.id)}
+                className="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+
+            </div>
+          )
+        }))
+      }
+
+    </div>
+  </div>
+)
 }
 
 export default MatchContent

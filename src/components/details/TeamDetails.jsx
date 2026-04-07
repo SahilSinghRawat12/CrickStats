@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 
 
-const TeamDetails = () => {
+const   TeamDetails = () => {
 
   const { teamId } = useParams();
   const { state, dispatch } = useContext(AppContext);
@@ -106,7 +106,6 @@ const TeamDetails = () => {
   };
 
 
-
   useEffect(() => {
     dispatch({ type: "SET_CURRENT_TEAM", payload: teamId });
     fetchTeams();
@@ -155,7 +154,7 @@ const TeamDetails = () => {
             <span className='text-xs text-gray-400 uppercase tracking-wider mt-1'>Players</span>
           </div>
           <div className='flex flex-col items-center py-4 border-r border-gray-100'>
-            <span className='text-2xl font-bold text-gray-800'>{teamPlayers.filter(p => p.is_Captain).length}</span>
+            <span className='text-2xl font-bold text-gray-800'>{teamPlayers.filter(p => p.is_captain).length}</span>
             <span className='text-xs text-gray-400 uppercase tracking-wider mt-1'>Captains</span>
           </div>
           <div className='flex flex-col items-center py-4'>
@@ -217,7 +216,7 @@ const TeamDetails = () => {
                 onClick={() => setSelectedPlayer(player)}>
                   {player.player_name}
                 </span>
-                {player.is_Captain && (
+                {player.is_captain && (
                   <span className='flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-red-400 text-white text-[10px] font-bold flex items-center justify-center shadow-sm'>
                     C
                   </span>

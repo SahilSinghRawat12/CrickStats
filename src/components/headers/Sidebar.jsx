@@ -1,11 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import logo from '../../assests/resize.png'
 import logoIcon from '../../assests/iconlogo.png'
 import {navItems} from "../../data/data.js"
 import { NavLink } from 'react-router-dom'
-import { IoMdArrowDroprightCircle } from "react-icons/io";
-import { IoMdArrowDropleftCircle } from "react-icons/io";
-
+import { IoMenu } from "react-icons/io5";
 
 const Sidebar = ({isOpen , setIsOpen}) => { 
 
@@ -14,51 +12,82 @@ const Sidebar = ({isOpen , setIsOpen}) => {
   }
 
   return (
-    <nav className={`bg-[#f2f4f6] h-[100vh] fixed top-0 left-0  
-     ${isOpen ? 'w-[250px]' : 'w-[100px]'}
-    `}>
+    <>
+      {/*  MOBILE NAVBAR */}
+      <div className="md:hidden w-full bg-[#f2f4f6] flex items-center justify-between px-4 py-3 shadow fixed top-0 left-0 z-50">
+        
+        <img src={logoIcon} className="w-[40px]" />
 
-      <div className='flex justify-end cursor-pointer' onClick={toggleNav}>
-           { 
-              isOpen ? 
-              (<IoMdArrowDropleftCircle size={25} className=''/>) :
-              (<IoMdArrowDroprightCircle size={25}/>)
-            }
+        <IoMenu size={28} className="cursor-pointer" onClick={toggleNav}/>
       </div>
 
-      <NavLink to='/'>
-       <div className='p-5'>
+      {/* MOBILE DROPDOWN MENU */}
+      {isOpen && (
+        <div className="md:hidden fixed top-[60px] left-0 w-full bg-[#f2f4f6] shadow z-40">
+          <ul className="flex flex-col p-4 gap-4">
             {
-               isOpen  ? (<img src={logo} alt="" className='w-[170px] transition-all duration-300 ' />) 
-               : (<img src={logoIcon} alt="" className='w-[50px] transition-all duration-300' />)
-            }
-       </div>
-      </NavLink>
-      
-        <ul className={`  h-full flex flex-col gap-y-8 transition-all duration-300  ${isOpen ? 'px-8 mt-5' : 'px-6 mt-7'}`}>
-            {
-                navItems.map( (item , index) => (
-                  <NavLink to={item.href} key={index}
-                   className={({isActive})=>
-                       isActive ? "bg-[#38598b] rounded-md text-white  " : ""
+              navItems.map((item , index) => (
+                <NavLink 
+                  to={item.href} 
+                  key={index}
+                  onClick={() => setIsOpen(false)}
+                  className={({isActive}) =>
+                    isActive ? "bg-[#38598b] text-white rounded-md" : ""
                   }
-                  >
-                  <li className={`flex items-center hover:bg-[#38598b] hover:text-white hover:rounded-md gap-5 transition-all duration-200
-                   ${isOpen ? '  p-5' : 'p-3 '} 
-                    `}>
-                      
-                      <item.icons size={26}/>  
-                      
-                      {
-                        isOpen && (<span className={`text-[15px] font-medium whitespace-nowrap transition-opacity duration-300
-                ${isOpen ? 'opacity-100 delay-200' : 'opacity-0'}`}>{item.title}</span>)
-                      }
+                >
+                  <li className="flex items-center gap-4 p-3 hover:bg-[#38598b] hover:text-white rounded-md">
+                    <item.icons size={22}/>  
+                    <span>{item.title}</span>
                   </li>
                 </NavLink>
-                ))
+              ))
             }
+          </ul>
+        </div>
+      )}
+
+      {/*  DESKTOP SIDEBAR */}
+      <nav className={`
+        hidden md:block bg-[#f2f4f6] h-screen fixed top-0 left-0 transition-all duration-300
+        ${isOpen ? 'w-[250px]' : 'w-[80px]'}
+      `}>
+
+        <div className='flex justify-end p-2 cursor-pointer font-bold' onClick={toggleNav}>
+          <IoMenu size={28} className="cursor-pointer" onClick={toggleNav}/>
+        </div>
+
+        <NavLink to='/'>
+          <div className='p-4'>
+            {
+              isOpen 
+              ? <img src={logo} className='w-[150px]' /> 
+              : <img src={logoIcon} className='w-[40px]' />
+            }
+          </div>
+        </NavLink>
+        
+        <ul className={`flex flex-col gap-y-6 ${isOpen ? 'px-6 mt-5' : 'px-3 mt-7'}`}>
+          {
+            navItems.map((item , index) => (
+              <NavLink 
+                to={item.href} 
+                key={index}
+                className={({isActive}) =>
+                  isActive ? "bg-[#38598b] text-white rounded-md" : ""
+                }
+              >
+                <li className={`flex items-center gap-4 hover:bg-[#38598b] hover:text-white rounded-md
+                  ${isOpen ? 'p-4' : 'p-3 justify-center'}
+                `}>
+                  <item.icons size={22}/>  
+                  {isOpen && <span>{item.title}</span>}
+                </li>
+              </NavLink>
+            ))
+          }
         </ul>
-    </nav>
+      </nav>
+    </>
   )
 }
 
