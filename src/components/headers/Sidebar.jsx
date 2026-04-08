@@ -1,15 +1,23 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import logo from '../../assests/resize.png'
 import logoIcon from '../../assests/iconlogo.png'
 import {navItems} from "../../data/data.js"
-import { NavLink } from 'react-router-dom'
+import { NavLink  , useLocation} from 'react-router-dom'
 import { IoMenu } from "react-icons/io5";
 
 const Sidebar = ({isOpen , setIsOpen}) => { 
 
+const location = useLocation();
+
+useEffect(() => {
+  setIsOpen(false);
+}, [location.pathname]);
+
+
   function toggleNav(){
      setIsOpen(!isOpen);
   }
+
 
   return (
     <>
