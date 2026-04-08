@@ -1282,7 +1282,7 @@ async function finishMatch() {
 
     return (
 
-      <div className="w-full min-h-screen px-12 py-8 bg-gray-50">
+      <div className="w-full min-h-screen px-3 sm:px-6 md:px-12 py-6 sm:py-8 bg-gray-50">
         <div className='left-5 top-5 absolute cursor-pointer' 
                         onClick={()=> {navigate(-1)}}>
                         <MdArrowBackIosNew/>
@@ -1303,9 +1303,9 @@ async function finishMatch() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold capitalize text-center mb-5">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold capitalize text-center mb-5">
             {teamA?.team_name}
-            <div className="mx-24">vs</div>
+            <div className="mx-4 sm:mx-12 md:mx-24">vs</div>
             {teamB?.team_name}
           </h1>
           <p className="text-gray-600 mt-1">
@@ -1319,7 +1319,7 @@ async function finishMatch() {
 
         {/* Score Summary */}
         <div className="bg-white border rounded-lg p-4 mb-8">
-          <h2 className="text-xl font-semibold capitalize">{battingTeam?.team_name} - {currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0} ({overDisplay})</h2>
+          <h2 className="text-lg font-semibold capitalize">{battingTeam?.team_name} - {currentInnings?.runs ?? 0}/{currentInnings?.wickets ?? 0} ({overDisplay})</h2>
           {
             currentMatch.currentInnings === 2 && 
             (<p className="text-gray-500 mt-1">Target: {currentMatch.target}</p>)
@@ -1327,15 +1327,15 @@ async function finishMatch() {
         </div>
 
         {/* Batting + Bowling */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 mb-10">
 
           {/* Batting */}
-          <div className="bg-white border rounded-lg p-5">
-            <h3 className="text-lg font-semibold mb-4 capitalize">Batting — {battingTeam?.team_name}</h3>
+          <div className="bg-white border rounded-lg p-4 sm:p-5">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 capitalize">Batting — {battingTeam?.team_name}</h3>
 
             <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
-              <span className="w-1/2">Batsman</span>
-              <div className="flex w-1/2 text-center">
+              <span className="w-1/2 text-xs sm:text-sm">Batsman</span>
+              <div className="flex w-1/2 text-center text-xs sm:text-sm">
                 <span className="w-full">R</span>
                 <span className="w-full">B</span>
                 <span className="w-full">4s</span>
@@ -1385,7 +1385,7 @@ async function finishMatch() {
           </div>
 
           {/* Bowling */}
-          <div className="bg-white border rounded-lg p-5">
+          <div className="bg-white border rounded-lg p-4 sm:p-5">
             <h3 className="text-lg font-semibold mb-4 capitalize">Bowling — {bowlingTeam?.team_name}</h3>
 
             <div className="border-b pb-2 flex text-sm font-medium text-gray-600">
@@ -1456,7 +1456,7 @@ async function finishMatch() {
         {/* Run Buttons */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold mb-3">Add Runs</h3>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-2 sm:gap-3 flex-wrap">
             {[0, 1, 2, 3, 4, 6].map((run) => (
               <button
                 key={run}
@@ -1473,7 +1473,7 @@ async function finishMatch() {
 
       
         {/* Extras */}
-        <div className="flex gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 mb-8">
         
             <button
               className="px-4 py-2 border rounded bg-white
@@ -1621,7 +1621,7 @@ async function finishMatch() {
 
 
         {/* Actions */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
             className="px-6 py-2 bg-blue-600 text-white rounded-md
                       hover:bg-blue-700 transition-colors duration-200"

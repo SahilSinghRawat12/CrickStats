@@ -132,161 +132,161 @@ const AddMatch = () => {
 
 
   return (
-    <div className='h-screen w-full'>
-        <div className=' bg-[#f9fafb] h-full flex justify-center py-2'>
-           
-            <form className='border border-black flex flex-col items-center pt-5 w-1/2 gap-y-8
-            bg-white relative'
-            onSubmit={submitHandler}>
+  <div className='h-screen w-full'>
+    <div className='bg-[#f9fafb] h-full flex justify-center py-2 px-2 sm:px-4 md:px-6'>
+       
+      <form className='border border-black flex flex-col items-center pt-5 w-full sm:w-[80%] md:w-[60%] lg:w-1/2 gap-y-8
+      bg-white relative'
+      onSubmit={submitHandler}>
 
-             {/* for back arrow */}
-              <div className='left-5 top-5 absolute cursor-pointer' 
-                onClick={()=> {navigate(-1) || navigate('/matches')}}>
-                <MdArrowBackIosNew/>
-              </div>
-
-                {/* for team selection */}
-               <div className='flex gap-20 w-full px-20'>
-                
-                   <div className='flex flex-col gap-y-2'>
-                    <label>Select Team A</label>
-                   <select
-                        required
-                        value={teamA ?? ""}
-                        onChange={(e) => setTeamA(e.target.value)}
-                        className="border border-black p-2 rounded"
-                        >
-
-                        <option value="" disabled hidden>Select Team</option>
-
-                        {state.teams.map(team => (
-                        <option
-                        key={team.id}
-                        value={team.id}
-                        disabled={team.id.toString() === teamB}
-                        className='capitalize'
-                        >
-                        {team.team_name}
-                        </option>
-                        ))}
-                    </select>
-                   </div>
-
-                  <div className='flex flex-col gap-y-2'>
-                    <label>Select Team B</label>
-                    <select className="border border-black p-2 rounded "
-                    required
-                    value={teamB ?? ""}
-                    onChange={(e) => setTeamB(e.target.value)}
-                    >
-
-                    <option value="" disabled hidden>Select Team</option>
-
-                    {state.teams.map(team => (
-                    <option
-                    key={team.id}
-                    value={team.id}
-                    disabled={team.id.toString() === teamA}
-                    className='capitalize'
-                    >
-                    {team.team_name}
-                    </option>
-                    ))}
-                    </select>
-                  </div>
-
-                </div>
-
-                    {/* for overs */}
-                   <div className='flex flex-col w-[80%] px-20 py-5 gap-8 border border-gray-500
-                   ' >
-                     
-                        <div className='flex flex-col items-center gap-2 '>
-                        <h1 className='text-md font-bold'>Overs</h1>
-
-                        <input 
-                        required
-                        type='number'
-                        min={1}
-                        name='overs'
-                        value={formData.overs}
-                        placeholder='Overs'
-                        onChange={changeHandler}
-                        className='border border-black p-2 rounded  '/>
-                        </div>
-
-
-                        <div className='flex flex-col items-center gap-2 '>
-                        <h1 className='text-md font-bold'>Match Date</h1>
-
-                        <input 
-                        required
-                        type='date'
-                        name='date'
-                        value={formData.date}
-                        onChange={changeHandler}
-                        className='border border-black p-2 rounded  '/>
-                        </div>
-
-                    </div>
-               
-                   {/* for toss */}
-                  { teamA && teamB && (
-                <div className='flex flex-col w-[50%] border border-gray-500 py-3 rounded-md'>
-
-                  <div className='flex px-5 justify-between border-b border-b-gray-500 py-2'>
-                    <div>Toss Winner</div>
-                    <div>Chose To</div>
-                  </div>
-
-                  <div className='flex px-5 justify-between py-2'>
-
-                    <select
-                      required
-                      name="tossWinner"
-                      value={formData.tossWinner || ""}
-                      onChange={changeHandler}
-                      className="border border-black rounded px-2 py-1"
-                    >
-                      <option value="" disabled hidden >Select Team</option>
-
-                      <option value={teamA} className='capitalize'>
-                        {state.teams.find(t => t.id.toString() === teamA)?.team_name}
-                      </option>
-
-                      <option value={teamB} className='capitalize'>
-                        {state.teams.find(t => t.id.toString() === teamB)?.team_name}
-                      </option>
-
-                    </select>
-
-                    <select
-                      className="border border-black rounded w-20 py-1"
-                      required
-                      name="tossDecision"
-                      value={formData.tossDecision}
-                      onChange={changeHandler}
-                    >
-                      <option value="" hidden>Select</option>
-                      <option value="bat">Bat</option>
-                      <option value="bowl">Bowl</option>
-                    </select>
-
-                  </div>
-
-                </div>
-                )}
-
-              <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white'>
-                Create Match
-              </button>   
-
-            </form>
-
-           
+       {/* for back arrow */}
+        <div className='left-3 sm:left-5 top-3 sm:top-5 absolute cursor-pointer' 
+          onClick={()=> {navigate(-1) || navigate('/matches')}}>
+          <MdArrowBackIosNew/>
         </div>
-    </div>
-  )
+
+          {/* for team selection */}
+         <div className='flex flex-col sm:flex-row gap-5 mt-8 md:mt-2 sm:gap-20 w-full px-4 sm:px-10 md:px-20'>
+          
+             <div className='flex flex-col gap-y-2 w-full'>
+              <label>Select Team A</label>
+             <select
+                  required
+                  value={teamA ?? ""}
+                  onChange={(e) => setTeamA(e.target.value)}
+                  className="border border-black p-2 rounded w-full"
+                  >
+
+                  <option value="" disabled hidden>Select Team</option>
+
+                  {state.teams.map(team => (
+                  <option
+                  key={team.id}
+                  value={team.id}
+                  disabled={team.id.toString() === teamB}
+                  className='capitalize'
+                  >
+                  {team.team_name}
+                  </option>
+                  ))}
+              </select>
+             </div>
+
+            <div className='flex flex-col gap-y-2 w-full'>
+              <label>Select Team B</label>
+              <select className="border border-black p-2 rounded w-full"
+              required
+              value={teamB ?? ""}
+              onChange={(e) => setTeamB(e.target.value)}
+              >
+
+              <option value="" disabled hidden>Select Team</option>
+
+              {state.teams.map(team => (
+              <option
+              key={team.id}
+              value={team.id}
+              disabled={team.id.toString() === teamA}
+              className='capitalize'
+              >
+              {team.team_name}
+              </option>
+              ))}
+              </select>
+            </div>
+
+          </div>
+
+              {/* for overs */}
+             <div className='flex flex-col w-full sm:w-[90%] md:w-[80%] px-4 sm:px-10 md:px-20 py-5 gap-8 border border-gray-500
+             ' >
+               
+                  <div className='flex flex-col items-center gap-2 '>
+                  <h1 className='text-md font-bold'>Overs</h1>
+
+                  <input 
+                  required
+                  type='number'
+                  min={1}
+                  name='overs'
+                  value={formData.overs}
+                  placeholder='Overs'
+                  onChange={changeHandler}
+                  className='border border-black p-2 rounded w-full sm:w-auto'/>
+                  </div>
+
+
+                  <div className='flex flex-col items-center gap-2 '>
+                  <h1 className='text-md font-bold'>Match Date</h1>
+
+                  <input 
+                  required
+                  type='date'
+                  name='date'
+                  value={formData.date}
+                  onChange={changeHandler}
+                  className='border border-black p-2 rounded w-full sm:w-auto'/>
+                  </div>
+
+              </div>
+         
+             {/* for toss */}
+            { teamA && teamB && (
+          <div className='flex flex-col w-full sm:w-[70%] md:w-[50%] border border-gray-500 py-3 rounded-md'>
+
+            <div className='flex px-4 sm:px-5 justify-between border-b border-b-gray-500 py-2'>
+              <div>Toss Winner</div>
+              <div>Chose To</div>
+            </div>
+
+            <div className='flex px-4 sm:px-5 justify-between py-2'>
+
+              <select
+                required
+                name="tossWinner"
+                value={formData.tossWinner || ""}
+                onChange={changeHandler}
+                className="border border-black rounded px-2 py-1"
+              >
+                <option value="" disabled hidden >Select Team</option>
+
+                <option value={teamA} className='capitalize'>
+                  {state.teams.find(t => t.id.toString() === teamA)?.team_name}
+                </option>
+
+                <option value={teamB} className='capitalize'>
+                  {state.teams.find(t => t.id.toString() === teamB)?.team_name}
+                </option>
+
+              </select>
+
+              <select
+                className="border border-black rounded w-20 py-1"
+                required
+                name="tossDecision"
+                value={formData.tossDecision}
+                onChange={changeHandler}
+              >
+                <option value="" hidden>Select</option>
+                <option value="bat">Bat</option>
+                <option value="bowl">Bowl</option>
+              </select>
+
+            </div>
+
+          </div>
+          )}
+
+        <button className='bg-[#142d4c] py-2 px-4 border border-black rounded-xl text-white w-1/2 sm:w-auto'>
+          Create Match
+        </button>   
+
+      </form>
+
+     
+  </div>
+</div>
+)
 }
 
 export default AddMatch
